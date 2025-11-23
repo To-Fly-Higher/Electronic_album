@@ -8,7 +8,32 @@ const routes = [
   { path: '/', redirect: '/login' },
   { path: '/login', component: Login },
   { path: '/register', component: Register },
-  { path: '/admin', component: AdminHome },
+
+  // 管理员后台
+  {
+    path: '/admin',
+    component: AdminHome,
+    children: [
+      {
+        path: 'album-category',
+        name: 'albumCategory',
+        component: () => import('../views/admin/AlbumCategory.vue')
+      },
+      {
+        path: 'review',
+        name: 'review',
+        component: () => import('../views/admin/Review.vue')
+      },
+      {
+        path: 'review/:userId',
+        name: 'adminReviewDetail',
+        component: () => import('../views/admin/ReviewDetail.vue'),
+        props: true
+      }
+    ]
+  },
+
+  // 普通用户
   {
     path: '/user',
     component: UserHome,
@@ -21,7 +46,6 @@ const routes = [
     ]
   }
 ]
-
 
 const router = createRouter({
   history: createWebHistory(),
