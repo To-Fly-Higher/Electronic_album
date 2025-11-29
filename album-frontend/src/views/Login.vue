@@ -15,12 +15,12 @@ import LoginForm from '../components/LoginForm.vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
+// 根据登录角色跳转
 const handleLoginSuccess = (role) => {
   if (role === 'admin') router.push('/admin')
   else router.push('/user')
 }
-
-
 </script>
 
 <style scoped>

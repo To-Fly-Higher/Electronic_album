@@ -20,6 +20,8 @@
 
 <script setup>
 import { ref } from 'vue'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const form = ref({
   username: '',
@@ -44,8 +46,24 @@ const rules = {
 
 const emit = defineEmits(['register-success'])
 
-const submitForm = () => {
-  // 模拟注册逻辑
-  emit('register-success')
+const submitForm = async () => {
+  try {
+    // 调用后端注册接口
+    const res = await axios.post('/api/user/register', {
+      username: form.value.username,
+      password: form.value.password
+    })
+
+    if (res.data.code === 200) {
+      ElMessage.success('注册成功')
+      emit('register-success')
+      // console.log('注册成功，跳转到登录页面')
+    } else {
+      ElMessage.error(res.data.msg || '注册失败')
+    }
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('请求失败，请稍后重试')
+  }
 }
 </script>

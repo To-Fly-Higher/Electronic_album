@@ -16,6 +16,8 @@
 
 <script setup>
 import { ref } from 'vue'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const form = ref({
   username: '',
@@ -29,21 +31,31 @@ const rules = {
 
 const emit = defineEmits(['login-success'])
 
-// const submitForm = () => {
-//   // 这里先写前端模拟登录
-//   if (form.value.username === 'admin') {
-//     emit('login-success', 'admin')
-//   } else {
-//     emit('login-success', 'user')
-//   }
-// }
-const submitForm = () => {
-  if (form.value.username === 'admin' && form.value.password === '123') {
-    emit('login-success', 'admin')   // 管理员
-  } else if (form.value.username === 'user' && form.value.password === '123') {
-    emit('login-success', 'user')    // 用户
-  } else {
-    ElMessage.error('账号或密码错误')
+const submitForm = async () => {
+  try {
+    // 调用后端登录接口
+    const response = await axios.post('/api/user/login', {
+      username: form.value.username,
+      password: form.value.password
+    })
+
+    if (response.data.code === 200) {
+      const userData = response.data.data
+      const role = userData.role === 1 ? 'admin' : 'user'
+
+      // 保存 token 和用户信息到 localStorage
+      localStorage.setItem('token', userData.token)
+      localStorage.setItem('user', JSON.stringify(userData))
+
+      // 通知父组件登录成功并传递角色
+      emit('login-success', role)
+    } else {
+      ElMessage.error(response.data.msg || '账号或密码错误')
+    }
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('接口请求失败')
   }
 }
+
 </script>

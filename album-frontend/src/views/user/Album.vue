@@ -10,48 +10,26 @@
         :md="8"
         :lg="6"
       >
-        <el-card
-          class="album-card"
-          :body-style="{ padding: '0' }"
-          shadow="hover"
-        >
-          <!-- 封面 -->
-          <img
-            :src="album.cover"
-            class="album-cover"
-            @click="openAlbum(album.id)"
-          />
-          <!-- 相册名 -->
+        <el-card class="album-card" :body-style="{ padding: '0' }" shadow="hover">
+          <img :src="album.cover_url" class="album-cover" @click="openAlbum(album)" />
           <div class="album-name">{{ album.name }}</div>
-
-          <!-- 操作按钮，左右一行 -->
           <div class="album-operations">
-            <el-button
-              type="primary"
-              size="small"
-              @click.stop="editAlbum(album.id)"
-            >
-              修改
-            </el-button>
-            <el-button
-              type="danger"
-              size="small"
-              @click.stop="deleteAlbum(album.id)"
-            >
-              删除
-            </el-button>
+            <el-button type="primary" size="small" @click.stop="editAlbum(album.id)">修改</el-button>
+            <el-button type="danger" size="small" @click.stop="deleteAlbum(album.id)">删除</el-button>
+            <el-button type="info" size="small" @click.stop="showRemark(album.remark)">备注</el-button>
           </div>
+          <el-dialog title="相册备注" v-model="remarkDialogVisible" width="400px">
+            <p>{{ currentRemark }}</p>
+            <span slot="footer">
+              <el-button @click="remarkDialogVisible = false">关闭</el-button>
+            </span>
+          </el-dialog>
         </el-card>
       </el-col>
 
       <!-- 新建相册卡片 -->
       <el-col :xs="24" :sm="12" :md="8" :lg="6">
-        <el-card
-          class="album-card new-album"
-          :body-style="{ padding: '0' }"
-          shadow="hover"
-          @click="createAlbum"
-        >
+        <el-card class="album-card new-album" :body-style="{ padding: '0' }" shadow="hover" @click="createAlbum">
           <div class="add-icon">+</div>
           <div class="album-name">新建相册</div>
         </el-card>
@@ -66,27 +44,39 @@
         </el-form-item>
 
         <el-form-item label="相册类别">
-          <el-select v-model="newAlbumForm.category" placeholder="请选择类别">
-            <el-option label="旅游" value="旅游"></el-option>
-            <el-option label="校园" value="校园"></el-option>
-            <el-option label="宠物" value="宠物"></el-option>
-            <el-option label="生活" value="生活"></el-option>
-            <el-option label="其他" value="其他"></el-option>
+          <el-select v-model="newAlbumForm.category_id" placeholder="请选择类别">
+            <el-option v-for="item in categories" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="封面图片">
           <el-upload
             class="upload-demo"
-            action=""
-            :auto-upload="false"
-            :on-change="handleCoverChange"
+            action="/api/user/upload"
+            :limit="1"
             list-type="picture"
-            :file-list="newAlbumForm.cover ? [{ name:'封面', url:newAlbumForm.cover }] : []"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+            :file-list="newAlbumForm.cover_url ? [{ name: '封面', url: newAlbumForm.cover_url }] : []"
           >
             <el-button size="small" type="primary">上传封面</el-button>
             <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
           </el-upload>
+        </el-form-item>
+
+        <el-form-item label="相册备注">
+          <el-input
+            type="textarea"
+            v-model="newAlbumForm.remark"
+            placeholder="请输入相册备注"
+            :rows="3"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="是否公开">
+          <el-radio-group v-model="newAlbumForm.is_public">
+            <el-radio :label="1">公开</el-radio>
+            <el-radio :label="0">私密</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
 
@@ -99,75 +89,151 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const albums = ref([])
+const categories = ref([])
 
-const albums = ref([
-  { id: 1, name: '旅游相册', category: '旅游', cover: 'https://picsum.photos/300/200?random=1' },
-  { id: 2, name: '校园生活', category: '校园', cover: 'https://picsum.photos/300/200?random=2' },
-  { id: 3, name: '宠物', category: '宠物', cover: 'https://picsum.photos/300/200?random=3' },
-])
+const remarkDialogVisible = ref(false)
+const currentRemark = ref('')
 
-const openAlbum = (id) => {
-  router.push(`/user/album/${id}`)
-}
-
-// 新建/修改弹窗逻辑
 const createDialogVisible = ref(false)
 const dialogTitle = ref('新建相册')
 const editingAlbumId = ref(null)
+const newAlbumForm = ref({ name: '', category_id: null, cover_url: '', remark: '', is_public: 0 })
 
-const newAlbumForm = ref({
-  name: '',
-  category: '',
-  cover: ''
-})
+// 获取当前用户信息
+const user = JSON.parse(localStorage.getItem('user'))
+const userId = user?.id
+// 打开相册
+const openAlbum = (album) => {
+  router.push({
+    path: `/user/album/${album.id}`,
+    query: { name: album.name }
+  })
+}
+// 加载相册列表
+const loadAlbums = async () => {
+  if (!userId) return
+  try {
+    const res = await axios.get('/api/user/album/list', { params: { userId } })
+    if (res.data.code === 200) albums.value = res.data.data
+    else ElMessage.error(res.data.msg)
+  } catch {
+    ElMessage.error('相册加载失败')
+  }
+}
 
+// 加载相册类别
+const loadCategories = async () => {
+  try {
+    const res = await axios.get('/api/user/album/categories')
+    if (res.data.code === 200) {
+      categories.value = res.data.data.map(item => ({
+        value: item.id,
+        label: item.name
+      }))
+    } else {
+      ElMessage.error('相册类别获取失败')
+    }
+  } catch {
+    ElMessage.error('相册类别获取失败')
+  }
+}
+
+// 新建/修改弹窗
 const createAlbum = () => {
   dialogTitle.value = '新建相册'
   editingAlbumId.value = null
-  newAlbumForm.value = { name: '', category: '', cover: '' }
+  newAlbumForm.value = { name: '', category_id: null, cover_url: '', remark: '', is_public: 0 }
   createDialogVisible.value = true
 }
 
-const handleCoverChange = (file) => {
-  const reader = new FileReader()
-  reader.readAsDataURL(file.raw)
-  reader.onload = () => {
-    newAlbumForm.value.cover = reader.result
-  }
-}
-
-const submitAlbum = () => {
-  if (!newAlbumForm.value.name || !newAlbumForm.value.category || !newAlbumForm.value.cover) {
-    return alert('请填写完整信息')
-  }
-
-  if (editingAlbumId.value) {
-    const index = albums.value.findIndex(a => a.id === editingAlbumId.value)
-    albums.value[index] = { id: editingAlbumId.value, ...newAlbumForm.value }
+// 上传封面处理
+const handleUploadSuccess = (res) => {
+  if (res.code === 200) {
+    newAlbumForm.value.cover_url = res.data.url
+    ElMessage.success('上传成功')
   } else {
-    const newId = albums.value.length + 1
-    albums.value.push({ id: newId, ...newAlbumForm.value })
+    ElMessage.error(res.msg || '上传失败')
   }
-  createDialogVisible.value = false
 }
 
-// 修改/删除方法
+const handleUploadError = () => {
+  ElMessage.error('上传失败，请重试')
+}
+
+// 新建/修改相册
+const submitAlbum = async () => {
+  if (!newAlbumForm.value.name || !newAlbumForm.value.category_id || !newAlbumForm.value.cover_url) {
+    return ElMessage.warning('请填写完整信息')
+  }
+
+  const payload = {
+    ...newAlbumForm.value,
+    user_id: userId,
+  }
+
+  try {
+    let res
+    if (editingAlbumId.value) {
+      res = await axios.put(`/api/user/album/${editingAlbumId.value}`, payload)
+    } else {
+      res = await axios.post('/api/user/album', payload)
+    }
+
+    if (res.data.code === 200) {
+      loadAlbums()
+      createDialogVisible.value = false
+      ElMessage.success(editingAlbumId.value ? '修改成功' : '创建成功')
+    } else {
+      ElMessage.error(res.data.msg)
+    }
+  } catch {
+    ElMessage.error('操作失败')
+  }
+}
+
+// 修改相册
 const editAlbum = (albumId) => {
+  const album = albums.value.find(a => a.id === albumId)
+  if (!album) return
   dialogTitle.value = '修改相册'
   editingAlbumId.value = albumId
-  const album = albums.value.find(a => a.id === albumId)
   newAlbumForm.value = { ...album }
   createDialogVisible.value = true
 }
 
+// 删除相册
 const deleteAlbum = (albumId) => {
-  const index = albums.value.findIndex(a => a.id === albumId)
-  if (index !== -1) albums.value.splice(index, 1)
+  const album = albums.value.find(a => a.id === albumId)
+  if (!album) return
+  axios.delete(`/api/user/album/${albumId}`)
+    .then(res => {
+      if (res.data.code === 200) {
+        albums.value = albums.value.filter(a => a.id !== albumId)
+        ElMessage.success('删除成功')
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    })
+    .catch(() => ElMessage.error('删除失败'))
 }
+
+// 显示备注
+const showRemark = (remark) => {
+  currentRemark.value = remark || '暂无备注'
+  remarkDialogVisible.value = true
+}
+
+onMounted(() => {
+  loadAlbums()
+  loadCategories()
+})
 </script>
 
 <style scoped>
@@ -177,26 +243,21 @@ const deleteAlbum = (albumId) => {
   text-align: center;
   position: relative;
 }
-
 .album-cover {
   width: 100%;
   height: 150px;
   object-fit: cover;
 }
-
 .album-name {
   padding: 10px 0;
   font-weight: bold;
   font-size: 16px;
 }
-
-/* 操作按钮左右显示 */
 .album-operations {
   display: flex;
   justify-content: space-between;
   padding: 0 10px 10px 10px;
 }
-
 .new-album {
   border: 2px dashed #409EFF;
   color: #409EFF;
