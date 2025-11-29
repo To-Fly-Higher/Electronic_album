@@ -103,17 +103,16 @@ import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const friends = ref([])
-
+const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
 // 前端直接处理好的列表，包含好友和请求
 const visibleFriends = computed(() => friends.value.filter(f => f))
 
 const loadFriends = async () => {
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) return ElMessage.warning('请先登录')
+  if (!userId) return ElMessage.warning('请先登录')
 
+  try {
     const res = await axios.get('/api/friend/list', {
-      headers: { Authorization: `Bearer ${token}` }
+      params: { user_id: userId } // 带上用户ID
     })
 
     if (res.data.code === 200 && res.data.data) {
@@ -151,61 +150,65 @@ const showAddFriendDialog = () => {
 // 搜索好友
 const searchFriend = async () => {
   if (!searchName.value) return ElMessage.warning('请输入昵称')
-  const token = localStorage.getItem('token')
-  if (!token) return ElMessage.warning('请先登录')
 
   try {
     const res = await axios.get(`/api/friend/search`, { 
-      params: { name: searchName.value },
-      headers: { Authorization: `Bearer ${token}` }
+      params: { name: searchName.value }
     })
-    if (res.data.code === 200 && res.data.data) searchResult.value = res.data.data
-    else searchResult.value = null, ElMessage.info('未找到该用户')
+    if (res.data.code === 200 && res.data.data) {
+      searchResult.value = res.data.data
+    } else {
+      searchResult.value = null
+      ElMessage.info('未找到该用户')
+    }
   } catch {
     ElMessage.error('搜索失败')
   }
 }
 
 // 发送好友请求
+// 发送好友请求
 const sendFriendRequest = async (friendId) => {
-  const token = localStorage.getItem('token')
-  if (!token) return ElMessage.warning('请先登录')
+  if (!userId) return ElMessage.warning('请先登录')
 
   try {
     const res = await axios.post(
       `/api/friend/request`,
-      { friend_id: friendId },
-      { headers: { Authorization: `Bearer ${token}` } }
+      { user_id: userId, friend_id: friendId }
     )
     if (res.data.code === 200) {
       ElMessage.success('好友请求已发送')
       addFriendDialogVisible.value = false
-    } else ElMessage.error(res.data.msg || '发送失败')
+    } else {
+      ElMessage.error(res.data.msg || '发送失败')
+    }
   } catch {
     ElMessage.error('发送失败')
   }
 }
 
+
 // 处理收到的好友请求（同意/拒绝）
 const handleRequest = async (requestId, action) => {
-  const token = localStorage.getItem('token')
-  if (!token) return ElMessage.warning('请先登录')
+  if (!userId) return ElMessage.warning('请先登录')
 
   try {
     const res = await axios.post(
       '/api/friend/handle-request',
-      { request_id: requestId, action },
-      { headers: { Authorization: `Bearer ${token}` } }
+      { user_id: userId, request_id: requestId, action }
     )
     if (res.data.code === 200) {
       ElMessage.success(action === 1 ? '已同意' : '已拒绝')
       // 刷新列表
       loadFriends()
-    } else ElMessage.error(res.data.msg || '操作失败')
+    } else {
+      ElMessage.error(res.data.msg || '操作失败')
+    }
   } catch {
     ElMessage.error('操作失败')
   }
 }
+
 
 onMounted(loadFriends)
 </script>

@@ -93,6 +93,7 @@ const router = useRouter()
 
 const friendId = route.params.friendId
 const albumId = route.params.albumId
+const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
 
 // ------- 数据 -------
 const friendName = ref('加载中...')
@@ -103,26 +104,54 @@ const token = localStorage.getItem('token')
 
 // ------- 获取好友信息 -------
 const loadFriendInfo = async () => {
-  const res = await axios.get(`/api/friend/${friendId}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  friendName.value = res.data.data.name
+  try {
+    if (!friendId) return
+
+    const res = await axios.get(`/api/friend/${friendId}`)
+    if (res.data.code === 200 && res.data.data) {
+      friendName.value = res.data.data.name
+    } else {
+      ElMessage.error(res.data.msg || '好友信息加载失败')
+    }
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('好友信息加载失败')
+  }
 }
 
 // ------- 获取相册信息 -------
 const loadAlbumInfo = async () => {
-  const res = await axios.get(`/api/album/${albumId}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  albumName.value = res.data.data.name
+  try {
+    if (!albumId) return
+
+    const res = await axios.get(`/api/album/${albumId}`)
+    if (res.data.code === 200 && res.data.data) {
+      albumName.value = res.data.data.name
+    } else {
+      ElMessage.error(res.data.msg || '相册信息加载失败')
+    }
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('相册信息加载失败')
+  }
 }
 
 // ------- 获取相册图片 -------
 const loadAlbumImages = async () => {
-  const res = await axios.get(`/api/album/${albumId}/images`, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-  images.value = res.data.data
+  try {
+    if (!albumId) return
+
+    const res = await axios.get(`/api/album/${albumId}/images`)
+    if (res.data.code === 200 && Array.isArray(res.data.data)) {
+      images.value = res.data.data
+    } else {
+      images.value = []
+      ElMessage.info(res.data.msg || '暂无图片')
+    }
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('相册图片加载失败')
+  }
 }
 
 // 初始化加载
@@ -138,14 +167,21 @@ onMounted(async () => {
 // ------- 点赞 -------
 const toggleLike = async (imageId) => {
   const img = images.value.find(i => i.id === imageId)
-  if (!img) return
+  if (!img || !userId) return
 
   img.liked = !img.liked
 
-  await axios.post(`/api/image/${imageId}/like`, 
-    { liked: img.liked },
-    { headers: { Authorization: `Bearer ${token}` } }
-  )
+  try {
+    await axios.post(`/api/image/${imageId}/like`, {
+      user_id: userId,    // 带上用户ID
+      liked: img.liked    // 当前点赞状态
+    })
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('操作失败')
+    // 点赞失败则回退状态
+    img.liked = !img.liked
+  }
 }
 
 
@@ -172,14 +208,15 @@ const cancelComment = () => {
 // ------- 评论 -------
 const submitComment = async () => {
   const text = newComment.value.trim()
-  if (!text) return
+  if (!text || !userId) return
 
   const newObj = {
     id: Date.now(),
     content: text,
-    user: { id: 0, nickname: '我', avatar: '' }
+    user: { id: userId, nickname: '我', avatar: '' } // 可根据实际情况更新昵称和头像
   }
 
+  // 前端立即更新界面
   currentImage.value.comments.push(newObj)
   currentImageComments.value.push(newObj)
   newComment.value = ''
@@ -187,10 +224,18 @@ const submitComment = async () => {
   await nextTick()
   scrollToBottom()
 
-  await axios.post(`/api/image/${currentImage.value.id}/comment`, 
-    { content: text },
-    { headers: { Authorization: `Bearer ${token}` } }
-  )
+  try {
+    await axios.post(`/api/image/${currentImage.value.id}/comment`, {
+      user_id: userId,  // 带上用户ID
+      content: text
+    })
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('评论提交失败')
+    // 可以选择回退评论
+    currentImage.value.comments.pop()
+    currentImageComments.value.pop()
+  }
 }
 
 

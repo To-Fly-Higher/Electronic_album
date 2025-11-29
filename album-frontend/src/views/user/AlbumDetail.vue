@@ -109,6 +109,7 @@ import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
+const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
 
 const albumId = route.params.id
 const albumName = ref(route.query.name || '相册')
@@ -150,7 +151,8 @@ const submitNewImage = async () => {
   try {
     await axios.post(`/api/album/${albumId}/image`, {
       name: newImageForm.value.name,
-      url: newImageForm.value.url
+      url: newImageForm.value.url,
+      user_id: userId // 加上用户ID
     })
     ElMessage.success('提交成功')
     newImageForm.value = { name: '', url: '' }
@@ -159,6 +161,7 @@ const submitNewImage = async () => {
   } catch {
     ElMessage.error('提交失败')
   }
+
 }
 
 

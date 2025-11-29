@@ -1,0 +1,17 @@
+package com.feiyang.albumb.mapper;
+
+import com.feiyang.albumb.entity.User;
+import org.apache.ibatis.annotations.*;
+
+@Mapper
+public interface UserMapper {
+
+    @Select("SELECT id, username, password, nickname, avatar, role " +
+            "FROM users WHERE username = #{username}")
+    User findByUsername(String username);
+
+    @Insert("INSERT INTO users(username, password, nickname, avatar, role) " +
+            "VALUES(#{username}, #{password}, #{nickname}, #{avatar}, #{role})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insertUser(User user);
+}

@@ -44,7 +44,7 @@ const submitForm = async () => {
       const role = userData.role === 1 ? 'admin' : 'user'
 
       // 保存 token 和用户信息到 localStorage
-      localStorage.setItem('token', userData.token)
+      // localStorage.setItem('token', userData.token)
       localStorage.setItem('user', JSON.stringify(userData))
 
       // 通知父组件登录成功并传递角色

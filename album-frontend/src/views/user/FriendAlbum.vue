@@ -46,15 +46,9 @@ const albums = ref([])
 // 拉取好友公开相册
 const loadAlbums = async () => {
   try {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      ElMessage.warning('请先登录')
-      return
-    }
+    if (!friendId) return
 
-    const res = await axios.get(`/api/friend/${friendId}/albums`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    const res = await axios.get(`/api/friend/${friendId}/albums`)
 
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       albums.value = res.data.data.map(a => ({
@@ -71,6 +65,7 @@ const loadAlbums = async () => {
     ElMessage.error('公开相册加载失败')
   }
 }
+
 
 // 点击进入相册详情页
 
