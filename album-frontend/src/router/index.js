@@ -42,7 +42,8 @@ const routes = [
       { path: 'album/:id', name: 'albumDetail', component: () => import('../views/user/AlbumDetail.vue'), props: true },
       { path: 'friends', name: 'friends', component: () => import('../views/user/Friends.vue') },
       { path: 'notifications', name: 'notifications', component: () => import('../views/user/Notifications.vue') },
-      { path: 'friend-album/:friendId', name: 'friendAlbum', component: () => import('../views/user/FriendAlbum.vue'), props: true }
+      { path: 'friend-album/:friendId', name: 'friendAlbum', component: () => import('../views/user/FriendAlbum.vue'), props: true },
+      { path: 'friend-album/:friendId/:albumId',name: 'friendImage', component: () => import('../views/user/FriendImage.vue'),props: true }
     ]
   }
 ]

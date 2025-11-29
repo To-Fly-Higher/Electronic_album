@@ -3,160 +3,89 @@
     <!-- 面包屑导航 -->
     <el-breadcrumb separator="/">
       <el-breadcrumb-item @click="goFriendsList" style="cursor: pointer;">好友列表</el-breadcrumb-item>
-      <el-breadcrumb-item>{{ albumName }}</el-breadcrumb-item>
+      <el-breadcrumb-item>{{ friendName }} 的公开相册</el-breadcrumb-item>
     </el-breadcrumb>
 
     <el-row :gutter="20" style="margin-top: 10px;">
-      <!-- 图片卡片 -->
+      <!-- 好友公开相册卡片 -->
       <el-col
-        v-for="image in images"
-        :key="image.id"
+        v-for="album in albums"
+        :key="album.id"
         :xs="24"
         :sm="12"
         :md="8"
         :lg="6"
       >
-        <el-card class="image-card" :body-style="{ padding: '10px' }" shadow="hover">
-          <!-- 图片 -->
-          <img :src="image.url" class="image-cover" />
-
-          <!-- 图片操作按钮 -->
-          <div class="image-actions">
-            <el-button
-              size="mini"
-              type="primary"
-              icon="el-icon-thumb"
-              @click="toggleLike(image.id)"
-            >
-              {{ image.liked ? '已赞' : '点赞' }}
-            </el-button>
-            <el-button
-              size="mini"
-              type="success"
-              icon="el-icon-chat-dot-round"
-              @click="openComment(image)"
-            >
-              评论
-            </el-button>
-          </div>
+        <el-card class="album-card" shadow="hover" @click="openAlbum(album.id)">
+          <img :src="album.cover" class="album-cover" />
+          <div class="album-name">{{ album.name }}</div>
         </el-card>
       </el-col>
+
+      <!-- 暂无相册 -->
+      <el-col v-if="albums.length === 0" :xs="24">
+        <div class="no-albums">该好友暂无公开相册</div>
+      </el-col>
     </el-row>
-
-    <!-- 评论弹窗 -->
-    <el-dialog
-      title="评论"
-      v-model="commentDialogVisible"
-      width="400px"
-      @open="scrollToBottom"
-    >
-      <div class="comment-list" ref="commentList">
-        <div v-for="(cmt, index) in currentImageComments" :key="index" class="comment-item">
-          <strong>{{ cmt.user }}:</strong> {{ cmt.text }}
-        </div>
-        <div v-if="currentImageComments.length === 0" class="no-comments">
-          暂无评论
-        </div>
-      </div>
-
-      <el-input
-        type="textarea"
-        v-model="newComment"
-        placeholder="输入评论..."
-        rows="3"
-      ></el-input>
-
-      <template #footer>
-        <el-button @click="cancelComment">取消</el-button>
-        <el-button type="primary" @click="submitComment">发布</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
-const albumId = route.params.albumId // 好友相册 ID
-const albumName = ref('好友公开相册')
+const friendId = route.params.friendId
 
-// 模拟相册里的图片数据，每张图片有自己的评论
-const images = ref([
-  {
-    id: 1,
-    url: 'https://picsum.photos/300/200?random=1',
-    liked: false,
-    comments: [
-      { user: 'Alice', text: '这张好美！' },
-      { user: 'Bob', text: '好喜欢！' }
-    ]
-  },
-  {
-    id: 2,
-    url: 'https://picsum.photos/300/200?random=2',
-    liked: false,
-    comments: [
-      { user: 'Charlie', text: '校园风景棒棒的！' }
-    ]
-  },
-  {
-    id: 3,
-    url: 'https://picsum.photos/300/200?random=3',
-    liked: false,
-    comments: [
-      { user: 'Daisy', text: '萌萌的宠物～' },
-      { user: 'Eve', text: '太可爱了' }
-    ]
-  },
-])
+const friendName = ref('好友')
+const albums = ref([])
 
-// 点赞逻辑
-const toggleLike = (imageId) => {
-  const image = images.value.find(i => i.id === imageId)
-  if (image) image.liked = !image.liked
-}
+// 拉取好友公开相册
+const loadAlbums = async () => {
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      ElMessage.warning('请先登录')
+      return
+    }
 
-// 评论逻辑
-const commentDialogVisible = ref(false)
-const currentImage = ref(null)
-const currentImageComments = ref([])
-const newComment = ref('')
-const commentList = ref(null)
+    const res = await axios.get(`/api/friend/${friendId}/albums`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
 
-const openComment = (image) => {
-  currentImage.value = image
-  currentImageComments.value = [...image.comments]
-  newComment.value = ''
-  commentDialogVisible.value = true
-}
-
-const cancelComment = () => {
-  commentDialogVisible.value = false
-}
-
-const submitComment = async () => {
-  if (!newComment.value.trim()) return
-  const commentObj = { user: '我', text: newComment.value.trim() }
-  currentImage.value.comments.push(commentObj)
-  currentImageComments.value.push(commentObj)
-  newComment.value = ''
-  await nextTick()
-  scrollToBottom()
-}
-
-const scrollToBottom = () => {
-  if (commentList.value) {
-    commentList.value.scrollTop = commentList.value.scrollHeight
+    if (res.data.code === 200 && Array.isArray(res.data.data)) {
+      albums.value = res.data.data.map(a => ({
+        ...a,
+        cover: a.cover || 'https://picsum.photos/300/200?random=' + a.id
+      }))
+      if (albums.value.length > 0) friendName.value = albums.value[0].ownerName || '好友'
+    } else {
+      albums.value = []
+      ElMessage.info(res.data.msg || '暂无公开相册')
+    }
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('公开相册加载失败')
   }
 }
 
-// 面包屑返回好友列表
+// 点击进入相册详情页
+
+const openAlbum = (albumId) => {
+  router.push(`/user/friend-album/${friendId}/${albumId}`)
+}
+
+// 返回好友列表
 const goFriendsList = () => {
   router.push('/user/friends')
 }
+
+onMounted(() => {
+  loadAlbums()
+})
 </script>
 
 <style scoped>
@@ -164,38 +93,30 @@ const goFriendsList = () => {
   padding: 20px;
 }
 
-.image-card {
+.album-card {
   text-align: center;
   margin-bottom: 20px;
+  cursor: pointer;
 }
 
-.image-cover {
+.album-cover {
   width: 100%;
   height: 150px;
   object-fit: cover;
-}
-
-.image-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 5px;
-}
-
-.comment-list {
-  max-height: 200px;
-  overflow-y: auto;
-  margin-bottom: 10px;
-  border: 1px solid #eee;
-  padding: 5px;
   border-radius: 4px;
 }
 
-.comment-item {
-  margin-bottom: 5px;
+.album-name {
+  margin-top: 8px;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
 }
 
-.no-comments {
-  color: #999;
+.no-albums {
   text-align: center;
+  color: #999;
+  margin-top: 20px;
+  font-size: 14px;
 }
 </style>
