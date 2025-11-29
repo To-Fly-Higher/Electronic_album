@@ -51,17 +51,20 @@
         <el-form-item label="图片名">
           <el-input v-model="newImageForm.name" placeholder="请输入图片名"></el-input>
         </el-form-item>
-        <el-form-item label="图片文件">
-          <el-upload
-            class="upload-demo"
-            action=""
-            :auto-upload="false"
-            :on-change="handleImageChange"
-            list-type="picture"
-          >
-            <el-button size="small" type="primary">选择图片</el-button>
-          </el-upload>
-        </el-form-item>
+          <el-form-item label="图片文件">
+            <el-upload
+              class="upload-demo"
+              action="/api/user/upload"       
+              :limit="1"
+              list-type="picture"
+              :on-success="handleUploadSuccess" 
+              :on-error="handleUploadError"
+              :file-list="newImageForm.url ? [{ name: '图片', url: newImageForm.url }] : []"
+            >
+              <el-button size="small" type="primary">上传图片</el-button>
+              <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
+            </el-upload>
+          </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="uploadDialogVisible=false">取消</el-button>
@@ -101,40 +104,17 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
 
 const albumId = route.params.id
-const albumName = ref('')
+const albumName = ref(route.query.name || '相册')
 
-// ------------------ 模拟图片数据 ------------------
-const images = ref([
-  {
-    id: 1,
-    name: '图片1',
-    url: 'https://picsum.photos/300/200?random=11',
-    likes: [
-      { id: 1, avatar: 'https://i.pravatar.cc/30?img=1' },
-      { id: 2, avatar: 'https://i.pravatar.cc/30?img=2' }
-    ],
-    comments: [
-      { id: 1, content: '好漂亮！', user: { id: 1, nickname: '小明', avatar: 'https://i.pravatar.cc/30?img=1' } },
-      { id: 2, content: '喜欢这张', user: { id: 2, nickname: '小红', avatar: 'https://i.pravatar.cc/30?img=2' } }
-    ]
-  },
-  {
-    id: 2,
-    name: '图片2',
-    url: 'https://picsum.photos/300/200?random=12',
-    likes: [
-      { id: 3, avatar: 'https://i.pravatar.cc/30?img=3' }
-    ],
-    comments: [
-      { id: 3, content: '赞一个', user: { id: 3, nickname: '小李', avatar: 'https://i.pravatar.cc/30?img=3' } }
-    ]
-  }
-])
+// ------------------ 图片数据 ------------------
+const images = ref([])
 
 // ------------------ 面包屑返回 ------------------
 const goBack = () => {
@@ -145,30 +125,51 @@ const goBack = () => {
 const uploadDialogVisible = ref(false)
 const newImageForm = ref({ name: '', url: '' })
 
-const uploadImage = () => {
-  uploadDialogVisible.value = true
-}
+const uploadImage = () => { uploadDialogVisible.value = true }
 
-const handleImageChange = (file) => {
-  const reader = new FileReader()
-  reader.readAsDataURL(file.raw)
-  reader.onload = () => {
-    newImageForm.value.url = reader.result
+const handleUploadSuccess = (res) => {
+  if (res.code === 200) {
+    // 直接把返回的 URL 存到 newImageForm
+    newImageForm.value.url = res.data.url
+    ElMessage.success('图片上传成功')
+  } else {
+    ElMessage.error(res.msg || '上传失败')
   }
 }
 
-const submitNewImage = () => {
-  if (!newImageForm.value.name || !newImageForm.value.url) return alert('请填写完整信息')
-  const newId = images.value.length + 1
-  images.value.push({
-    id: newId,
-    name: newImageForm.value.name,
-    url: newImageForm.value.url,
-    likes: [],
-    comments: []
-  })
-  newImageForm.value = { name: '', url: '' }
-  uploadDialogVisible.value = false
+const handleUploadError = () => {
+  ElMessage.error('上传失败，请重试')
+}
+
+const submitNewImage = async () => {
+  if (!newImageForm.value.name || !newImageForm.value.url) {
+    return ElMessage.warning('请填写完整信息')
+  }
+
+  // 提交的时候只传 URL 和图片名
+  try {
+    await axios.post(`/api/album/${albumId}/image`, {
+      name: newImageForm.value.name,
+      url: newImageForm.value.url
+    })
+    ElMessage.success('提交成功')
+    newImageForm.value = { name: '', url: '' }
+    uploadDialogVisible.value = false
+    loadImages() // 刷新图片列表
+  } catch {
+    ElMessage.error('提交失败')
+  }
+}
+
+
+// ------------------ 加载图片 ------------------
+const loadImages = async () => {
+  try {
+    const res = await axios.get(`/api/album/${albumId}/images`)
+    images.value = res.data.data || []
+  } catch {
+    ElMessage.error('图片加载失败')
+  }
 }
 
 // ------------------ 图片预览 ------------------
@@ -181,8 +182,14 @@ const showPreview = (url) => {
 }
 
 // ------------------ 删除图片 ------------------
-const deleteImage = (id) => {
-  images.value = images.value.filter(img => img.id !== id)
+const deleteImage = async (id) => {
+  try {
+    await axios.delete(`/api/album/${albumId}/image/${id}`)
+    images.value = images.value.filter(img => img.id !== id)
+    ElMessage.success('删除成功')
+  } catch {
+    ElMessage.error('删除失败')
+  }
 }
 
 // ------------------ 动态弹窗 ------------------
@@ -193,6 +200,8 @@ const showDynamic = (img) => {
   selectedImage.value = img
   dynamicVisible.value = true
 }
+
+// ------------------ 下载图片 ------------------
 const downloadImage = (img) => {
   const link = document.createElement('a')
   link.href = img.url
@@ -202,13 +211,11 @@ const downloadImage = (img) => {
   document.body.removeChild(link)
 }
 
-
-// ------------------ 初始化相册名 ------------------
 onMounted(() => {
-  const albumMap = { 1: '旅游相册', 2: '校园生活', 3: '宠物' }
-  albumName.value = albumMap[albumId] || '相册'
+  loadImages()
 })
 </script>
+
 
 <style scoped>
 .album-image {
@@ -236,6 +243,9 @@ onMounted(() => {
   font-size: 36px;
   line-height: 1;
   margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .image-buttons {
   display: flex;
