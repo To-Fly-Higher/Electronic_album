@@ -14,4 +14,9 @@ public interface UserMapper {
             "VALUES(#{username}, #{password}, #{nickname}, #{avatar}, #{role})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insertUser(User user);
+
+    // 根据 ID 查询用户
+    @Select("SELECT id, username, password, nickname, avatar, role " +
+            "FROM users WHERE id = #{id}")
+    User getById(@Param("id") Integer id);
 }

@@ -116,19 +116,13 @@ const loadFriends = async () => {
     })
 
     if (res.data.code === 200 && res.data.data) {
-      // 前端把 friends 和 requests 合并成一个数组，并加上 type
-      const list = []
-
-      // 已好友
-      res.data.data.friends?.forEach(f => list.push({ ...f, type: 'friend' }))
-      // 待请求
-      res.data.data.requests?.forEach(r => list.push({ ...r }))
-
-      friends.value = list
+      friends.value = res.data.data;  // 直接赋值
+      console.log(friends.value);     // 检查是否有数据
     } else {
-      friends.value = []
-      ElMessage.info(res.data.msg || '暂无好友')
+      friends.value = [];
+      ElMessage.info(res.data.msg || '暂无好友');
     }
+
   } catch (err) {
     console.error(err)
     ElMessage.error('好友列表加载失败')
