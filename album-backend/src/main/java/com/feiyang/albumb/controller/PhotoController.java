@@ -49,11 +49,6 @@ public class PhotoController {
             result.put("code", 400);
             result.put("msg", e.getMessage());
             return result;
-        } catch (Exception e) {
-            // 系统异常（文件删除失败、数据库错误等）
-            result.put("code", 500);
-            result.put("msg", "照片删除失败");
-            return result;
         }
     }
 }

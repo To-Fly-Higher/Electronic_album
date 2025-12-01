@@ -220,7 +220,8 @@ const showDynamic = (img) => {
 // ------------------ 下载图片 ------------------
 const downloadImage = (img) => {
   const link = document.createElement('a')
-  link.href = img.url
+  const BASE_URL = 'http://localhost:8080'
+  link.href = img.url.startsWith('http') ? img.url : BASE_URL + img.url
   link.download = img.name || '图片'
   document.body.appendChild(link)
   link.click()
