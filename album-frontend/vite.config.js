@@ -19,7 +19,7 @@ export default defineConfig({
     port: 5173, // 前端开发服务器端口，可按需修改
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:4523/m1/7483523-7218831-default', // 后端接口地址
+        target: 'http://localhost:8080', // 后端接口地址
         changeOrigin: true,
         rewrite: path => path.replace(/^\/api/, '') // 去掉前缀
       }

@@ -11,7 +11,7 @@
         :lg="6"
       >
         <el-card class="album-card" :body-style="{ padding: '0' }" shadow="hover">
-          <img :src="album.cover_url" class="album-cover" @click="openAlbum(album)" />
+          <img :src="`http://localhost:8080${album.cover_url}`" class="album-cover" @click="openAlbum(album)" />
           <div class="album-name">{{ album.name }}</div>
           <div class="album-operations">
             <el-button type="primary" size="small" @click.stop="editAlbum(album.id)">修改</el-button>
@@ -50,7 +50,7 @@
         </el-form-item>
 
         <el-form-item label="封面图片">
-          <el-upload
+          <!-- <el-upload
             class="upload-demo"
             action="/api/user/upload"
             :limit="1"
@@ -61,7 +61,20 @@
           >
             <el-button size="small" type="primary">上传封面</el-button>
             <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
+          </el-upload> -->
+          <el-upload
+            class="upload-demo"
+            :auto-upload="false"
+            :limit="1"
+            list-type="picture"
+            :file-list="newAlbumForm.cover_preview ? [{ name: '封面', url: newAlbumForm.cover_preview }] : []"
+
+            :on-change="handleFileChange"
+          >
+            <el-button size="small" type="primary">选择封面</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
           </el-upload>
+
         </el-form-item>
 
         <el-form-item label="相册备注">
@@ -121,6 +134,7 @@ const loadAlbums = async () => {
   if (!userId) return
   try {
     const res = await axios.get('/api/user/album/list', { params: { userId } })
+    console.log(res.data)
     if (res.data.code === 200) albums.value = res.data.data
     else ElMessage.error(res.data.msg)
   } catch {
@@ -162,28 +176,41 @@ const handleUploadSuccess = (res) => {
     ElMessage.error(res.msg || '上传失败')
   }
 }
+// 保存选中的文件对象
+const handleFileChange = (file) => {
+  newAlbumForm.value.cover_file = file.raw
+  // 用于显示预览
+  newAlbumForm.value.cover_preview = URL.createObjectURL(file.raw)
+}
 
 const handleUploadError = () => {
   ElMessage.error('上传失败，请重试')
 }
 
-// 新建/修改相册
+
 const submitAlbum = async () => {
-  if (!newAlbumForm.value.name || !newAlbumForm.value.category_id || !newAlbumForm.value.cover_url) {
+  if (!newAlbumForm.value.name || !newAlbumForm.value.category_id || !newAlbumForm.value.cover_file) {
     return ElMessage.warning('请填写完整信息')
   }
 
-  const payload = {
-    ...newAlbumForm.value,
-    user_id: userId,
-  }
+  const formData = new FormData()
+  formData.append('name', newAlbumForm.value.name)
+  formData.append('categoryId', newAlbumForm.value.category_id)
+  formData.append('remark', newAlbumForm.value.remark || '')
+  formData.append('isPublic', newAlbumForm.value.is_public)
+  formData.append('userId', userId)
+  formData.append('coverFile', newAlbumForm.value.cover_file)
 
   try {
     let res
     if (editingAlbumId.value) {
-      res = await axios.put(`/api/user/album/${editingAlbumId.value}`, payload)
+      res = await axios.put(`/api/user/album/${editingAlbumId.value}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
     } else {
-      res = await axios.post('/api/user/album', payload)
+      res = await axios.post('/api/user/album', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
     }
 
     if (res.data.code === 200) {
@@ -199,14 +226,29 @@ const submitAlbum = async () => {
 }
 
 // 修改相册
+// const editAlbum = (albumId) => {
+//   const album = albums.value.find(a => a.id === albumId)
+//   if (!album) return
+//   dialogTitle.value = '修改相册'
+//   editingAlbumId.value = albumId
+//   newAlbumForm.value = { ...album }
+//   createDialogVisible.value = true
+// }
 const editAlbum = (albumId) => {
   const album = albums.value.find(a => a.id === albumId)
   if (!album) return
   dialogTitle.value = '修改相册'
   editingAlbumId.value = albumId
-  newAlbumForm.value = { ...album }
+
+  // 回显封面图片
+  newAlbumForm.value = { 
+    ...album,
+    cover_file: null, // 没有新上传文件
+    cover_preview: `http://localhost:8080${album.cover_url}` // 用现有图片 URL 显示
+  }
   createDialogVisible.value = true
 }
+
 
 // 删除相册
 const deleteAlbum = (albumId) => {

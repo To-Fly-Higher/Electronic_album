@@ -161,7 +161,6 @@ const submitNewImage = async () => {
   } catch {
     ElMessage.error('提交失败')
   }
-
 }
 
 

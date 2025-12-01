@@ -1,9 +1,9 @@
-package com.feiyang.albumb.controller.dto;
+package com.feiyang.albumb.dto;
 
 import lombok.Data;
 
 @Data
-public class LoginRequest {
+public class RegisterRequest {
     private String username;
     private String password;
 }

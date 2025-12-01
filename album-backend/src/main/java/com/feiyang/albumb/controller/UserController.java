@@ -1,10 +1,11 @@
 package com.feiyang.albumb.controller;
 
 import com.feiyang.albumb.common.Result;
-import com.feiyang.albumb.controller.dto.LoginRequest;
-import com.feiyang.albumb.controller.dto.RegisterRequest;
+import com.feiyang.albumb.dto.LoginRequest;
+import com.feiyang.albumb.dto.RegisterRequest;
 import com.feiyang.albumb.entity.User;
 import com.feiyang.albumb.service.UserService;
+import com.feiyang.albumb.service.impl.UserServiceImpl;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/user")
