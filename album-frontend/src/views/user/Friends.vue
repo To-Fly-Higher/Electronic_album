@@ -82,7 +82,7 @@
         </el-form-item>
       </el-form>
       <div v-if="searchResult" class="search-result">
-        <div>{{ searchResult.name }}</div>
+        <div>{{ searchResult.nickname }}</div>
         <el-button type="primary" size="small" @click="sendFriendRequest(searchResult.id)">
           发送好友请求
         </el-button>
@@ -160,7 +160,7 @@ const searchFriend = async () => {
   }
 }
 
-// 发送好友请求
+
 // 发送好友请求
 const sendFriendRequest = async (friendId) => {
   if (!userId) return ElMessage.warning('请先登录')

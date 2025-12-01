@@ -86,4 +86,9 @@ public class UserServiceImpl implements UserService {
         // 4. 登录成功
         return user;
     }
+
+    @Override
+    public User findByNickname(String nickname) {
+        return userMapper.findByNickname(nickname);
+    }
 }

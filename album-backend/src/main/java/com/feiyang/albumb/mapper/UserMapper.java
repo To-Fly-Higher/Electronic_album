@@ -19,4 +19,11 @@ public interface UserMapper {
     @Select("SELECT id, username, password, nickname, avatar, role " +
             "FROM users WHERE id = #{id}")
     User getById(@Param("id") Integer id);
+
+
+    @Select("SELECT id, username, nickname, avatar, role " +
+            "FROM users " +
+            "WHERE nickname = #{nickname} " +
+            "LIMIT 1")
+    User findByNickname(@Param("nickname") String nickname);
 }

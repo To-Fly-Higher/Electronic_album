@@ -18,4 +18,6 @@ public interface UserService {
      * @return 登录成功的用户对象
      */
     User login(String username, String password);
+
+    User findByNickname(String nickname);
 }
