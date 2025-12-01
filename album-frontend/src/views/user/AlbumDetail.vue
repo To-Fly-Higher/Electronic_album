@@ -52,18 +52,18 @@
           <el-input v-model="newImageForm.name" placeholder="请输入图片名"></el-input>
         </el-form-item>
           <el-form-item label="图片文件">
-            <el-upload
-              class="upload-demo"
-              action="/api/user/upload"       
-              :limit="1"
-              list-type="picture"
-              :on-success="handleUploadSuccess" 
-              :on-error="handleUploadError"
-              :file-list="newImageForm.url ? [{ name: '图片', url: newImageForm.url }] : []"
-            >
-              <el-button size="small" type="primary">上传图片</el-button>
-              <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
-            </el-upload>
+          <el-upload
+            class="upload-demo"
+            :auto-upload="false"
+            :limit="1"
+            list-type="picture"
+            :file-list="newImageForm.file ? [{ name: '图片', url: newImageForm.preview }] : []"
+            :on-change="handleImageChange"
+          >
+            <el-button size="small" type="primary">选择图片</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
+          </el-upload>
+
           </el-form-item>
       </el-form>
       <template #footer>
@@ -124,7 +124,7 @@ const goBack = () => {
 
 // ------------------ 上传图片 ------------------
 const uploadDialogVisible = ref(false)
-const newImageForm = ref({ name: '', url: '' })
+// const newImageForm = ref({ name: '', url: '' })
 
 const uploadImage = () => { uploadDialogVisible.value = true }
 
@@ -137,32 +137,46 @@ const handleUploadSuccess = (res) => {
     ElMessage.error(res.msg || '上传失败')
   }
 }
+const newImageForm = ref({
+  name: '',
+  file: null,      // 文件对象
+  preview: ''      // 用于预览
+})
+
+
+const handleImageChange = (file) => {
+  newImageForm.value.file = file.raw
+  newImageForm.value.preview = URL.createObjectURL(file.raw)
+}
+
 
 const handleUploadError = () => {
   ElMessage.error('上传失败，请重试')
 }
 
 const submitNewImage = async () => {
-  if (!newImageForm.value.name || !newImageForm.value.url) {
+  if (!newImageForm.value.name || !newImageForm.value.file) {
     return ElMessage.warning('请填写完整信息')
   }
 
-  // 提交的时候只传 URL 和图片名
+  const formData = new FormData()
+  formData.append('name', newImageForm.value.name)
+  formData.append('userId', userId) // 加上用户ID
+  formData.append('imageFile', newImageForm.value.file) // 上传文件对象
+
   try {
-    await axios.post(`/api/album/${albumId}/image`, {
-      name: newImageForm.value.name,
-      url: newImageForm.value.url,
-      user_id: userId // 加上用户ID
+    await axios.post(`/api/album/${albumId}/image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
     ElMessage.success('提交成功')
-    newImageForm.value = { name: '', url: '' }
+    // 重置表单
+    newImageForm.value = { name: '', file: null, preview: '' }
     uploadDialogVisible.value = false
     loadImages() // 刷新图片列表
   } catch {
     ElMessage.error('提交失败')
   }
 }
-
 
 // ------------------ 加载图片 ------------------
 const loadImages = async () => {
