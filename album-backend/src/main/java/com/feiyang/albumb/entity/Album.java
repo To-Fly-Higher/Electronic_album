@@ -11,5 +11,5 @@ public class Album {
     private String name;         // 相册名称
     private String coverUrl;     // 封面地址（可为空）
     private String remark;       // 描述（可为空）
-    private Integer IsPublic;  // 权限：0公开 1私有
+    private Integer isPublic;  // 权限：0公开 1私有
 }
