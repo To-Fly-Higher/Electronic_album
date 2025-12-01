@@ -2,6 +2,8 @@ package com.feiyang.albumb.entity;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class Photo {
     private Integer id;         // 图片ID

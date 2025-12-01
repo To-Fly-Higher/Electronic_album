@@ -101,6 +101,7 @@ public class AlbumController {
             return Result.fail(500, "服务器错误");
         }
     }
+
     @DeleteMapping("/{id}")
     public Result<Void> deleteAlbum(@PathVariable Integer id) {
         boolean success = albumService.deleteAlbum(id);

@@ -26,4 +26,11 @@ public interface PhotoMapper {
     // 不删 album_photo 关联
     @Delete("DELETE FROM photo WHERE id = #{id}")
     int deleteById(@Param("id") Integer id);
+
+
+    @Select("SELECT p.id, p.name, p.url " +
+            "FROM photo p " +
+            "JOIN album_photo ap ON p.id = ap.photo_id " +
+            "WHERE ap.album_id = #{albumId}")
+    List<Photo> getPhotosByAlbumId(@Param("albumId") Integer albumId);
 }

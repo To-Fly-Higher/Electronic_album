@@ -1,6 +1,7 @@
 package com.feiyang.albumb.service;
 
 import com.feiyang.albumb.entity.Photo;
+import com.feiyang.albumb.vo.PhotoVO;
 
 import java.util.List;
 
@@ -15,4 +16,6 @@ public interface PhotoService {
     // 从相册中删除一张图片
     // 处理关联 & 图片本身
     boolean deletePhoto(Integer albumId, Integer photoId);
+
+    List<PhotoVO> getPhotosByAlbumId(Integer albumId);
 }

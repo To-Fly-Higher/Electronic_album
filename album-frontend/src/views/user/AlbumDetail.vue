@@ -18,7 +18,7 @@
       >
         <el-card :body-style="{ padding: '0' }" shadow="hover">
           <!-- 点击图片弹大图 -->
-          <img :src="img.url" class="album-image" @click="showPreview(img.url)" />
+          <img :src="`http://localhost:8080${img.url}`" class="album-image" @click="showPreview(img.url)" />
 
           <div class="image-name">{{ img.name }}</div>
 
@@ -74,7 +74,7 @@
 
     <!-- 图片预览对话框 -->
     <el-dialog v-model="previewVisible" width="50%" :show-close="true" :close-on-click-modal="true">
-      <img :src="previewUrl" style="width:100%" />
+      <img :src="`http://localhost:8080${previewUrl}`" style="width:100%" />
     </el-dialog>
 
     <!-- 动态弹窗 -->
