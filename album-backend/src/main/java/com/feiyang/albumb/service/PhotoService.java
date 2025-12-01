@@ -18,4 +18,5 @@ public interface PhotoService {
     boolean deletePhoto(Integer albumId, Integer photoId);
 
     List<PhotoVO> getPhotosByAlbumId(Integer albumId);
+
 }
