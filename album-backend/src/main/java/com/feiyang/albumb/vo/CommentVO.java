@@ -7,5 +7,5 @@ import lombok.Data;
 public class CommentVO {
     private Integer id;
     private String content;
-    private User user;  // 评论者
+    private CUserVO user;
 }

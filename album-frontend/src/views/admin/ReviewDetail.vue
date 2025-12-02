@@ -62,11 +62,11 @@
           :key="index"
           class="comment-item"
         >
-          <strong>{{ cmt.user.username }}:</strong> {{ cmt.content }}
+          <strong>{{ cmt.user.nickname }}:</strong> {{ cmt.content }}
           <el-button
             type="danger"
             size="mini"
-            @click="deleteComment(index)"
+            @click="deleteComment(cmt.id)"
             style="margin-left: 5px;"
           >
             删除
@@ -103,25 +103,10 @@ const currentImage = ref(null)
 const currentImageComments = ref([])
 const commentList = ref(null)
 
-// 获取单个公开相册详情
-// const loadAlbum = async () => {
-//   try {
-//     const res = await axios.get(`/api/album/${albumId}`)
-//     if (res.data.code === 200 && res.data.data) {
-//       albumImages.value = res.data.data.map(img => ({
-//         id: img.id,
-//         name: img.name,
-//         url: fixUrl(img.url),
-//         comments: img.comments || []
-//       }))
-//     }
-//   } catch (err) {
-//     console.error(err)
-//   }
-// }
+
 const loadAlbum = async () => {
   try {
-    const res = await axios.get(`/api/admin/album/${albumId}`)
+    const res = await axios.get(`/api/album/${albumId}/images`)
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       albumImages.value = res.data.data.map(img => ({
         id: img.id,
@@ -150,31 +135,53 @@ const openComments = (image) => {
   commentDialogVisible.value = true
 }
 
-const deleteComment = (index) => {
-  if (confirm('确认删除该评论吗？')) {
-    currentImageComments.value.splice(index, 1)
-    const imgIndex = albumImages.value.findIndex(img => img.id === currentImage.value.id)
-    if (imgIndex !== -1) albumImages.value[imgIndex].comments = [...currentImageComments.value]
-  }
-}
+
 
 const scrollToBottom = () => {
   if (commentList.value) {
     commentList.value.scrollTop = commentList.value.scrollHeight
   }
 }
+// 删除评论
+const deleteComment = (commentId) => {
+  if (!confirm('确认删除该评论吗？')) return;
+  console.log('Deleting comment with ID:', commentId);
+  axios.delete(`/api/album/${commentId}`)
+    .then(res => {
+      if (res.data.code === 200) {
+        // 删除本地数组
+        const index = currentImageComments.value.findIndex(c => c.id === commentId);
+        if (index !== -1) currentImageComments.value.splice(index, 1);
 
-const deleteImage = (imageId) => {
-  if (confirm('确认删除该图片吗？')) {
-    const index = albumImages.value.findIndex(img => img.id === imageId)
-    if (index !== -1) albumImages.value.splice(index, 1)
-  }
-}
+        const imgIndex = albumImages.value.findIndex(img => img.id === currentImage.value.id);
+        if (imgIndex !== -1) {
+          albumImages.value[imgIndex].comments = [...currentImageComments.value];
+        }
+      }
+    }).catch(err => {
+  console.error('Delete error:', err);
+  ElMessage.error('删除失败');
+});
+};
+
+// 删除图片
+const deleteImage = (photoId) => {
+  if (!confirm('确认删除该图片吗？')) return;
+
+  axios.delete(`/api/album/${albumId}/image/${photoId}`)
+    .then(res => {
+      if (res.data.code === 200) {
+        const index = albumImages.value.findIndex(img => img.id === photoId)
+        if (index !== -1) albumImages.value.splice(index, 1)
+      }
+    }).catch(err => console.error(err));
+};
 
 const deleteAlbum = () => {
   if (confirm('确认删除该用户的公开相册吗？')) {
     // 调接口删除相册
-    axios.delete(`/api/admin/album/${albumId}`).then(res => {
+    const id = albumId
+    axios.delete(`/api/user/album/${id}`).then(res => {
       if (res.data.code === 200) router.back()
     }).catch(err => console.error(err))
   }

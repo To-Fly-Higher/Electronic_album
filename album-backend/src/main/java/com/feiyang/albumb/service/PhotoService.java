@@ -19,4 +19,9 @@ public interface PhotoService {
 
     List<PhotoVO> getPhotosByAlbumId(Integer albumId);
 
+
+    //发表评论
+    void addComment(Integer photoId, Integer userId, String comment);
+
+    boolean deleteComment(Integer commentId);
 }

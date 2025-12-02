@@ -1,6 +1,7 @@
 package com.feiyang.albumb.mapper;
 
 import com.feiyang.albumb.entity.User;
+import com.feiyang.albumb.vo.LikeVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -31,6 +32,12 @@ public interface PhotoLikeMapper {
     @Insert("INSERT INTO photo_like (photo_id, user_id) " +
             "VALUES (#{photoId}, #{userId})")
     int likePhoto(@Param("photoId") Integer photoId, @Param("userId") Integer userId);
+
+    @Select("SELECT l.id, u.avatar " +
+            "FROM photo_like l " +
+            "JOIN users u ON l.user_id = u.id " +
+            "WHERE l.photo_id = #{photoId}")
+    List<LikeVO> getLikeByPhotoId(Integer photoId);
 }
 
 

@@ -117,6 +117,8 @@ const loadFriends = async () => {
 
     if (res.data.code === 200 && res.data.data) {
       friends.value = res.data.data;  // 直接赋值
+      console.log('好友列表加载成功');
+      console.log(res.data.data);
       console.log(friends.value);     // 检查是否有数据
     } else {
       friends.value = [];

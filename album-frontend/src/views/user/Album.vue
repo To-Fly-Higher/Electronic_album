@@ -52,18 +52,6 @@
         </el-form-item>
 
         <el-form-item label="封面图片">
-          <!-- <el-upload
-            class="upload-demo"
-            action="/api/user/upload"
-            :limit="1"
-            list-type="picture"
-            :on-success="handleUploadSuccess"
-            :on-error="handleUploadError"
-            :file-list="newAlbumForm.cover_url ? [{ name: '封面', url: newAlbumForm.cover_url }] : []"
-          >
-            <el-button size="small" type="primary">上传封面</el-button>
-            <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
-          </el-upload> -->
           <el-upload
             class="upload-demo"
             :auto-upload="false"
@@ -218,7 +206,8 @@ const handleUploadError = () => {
 
 
 const submitAlbum = async () => {
-  if (!newAlbumForm.value.name || !newAlbumForm.value.category_id || !newAlbumForm.value.cover_file) {
+  // 必填校验：相册名、类别必填，封面只在新建或修改上传时必填
+  if (!newAlbumForm.value.name || !newAlbumForm.value.category_id) {
     return ElMessage.warning('请填写完整信息')
   }
 
@@ -228,7 +217,15 @@ const submitAlbum = async () => {
   formData.append('remark', newAlbumForm.value.remark || '')
   formData.append('isPublic', newAlbumForm.value.is_public)
   formData.append('userId', userId)
-  formData.append('coverFile', newAlbumForm.value.cover_file)
+
+  // 如果用户上传了新封面文件，则传文件；否则保留原封面URL
+  if (newAlbumForm.value.cover_file) {
+    formData.append('coverFile', newAlbumForm.value.cover_file)
+  } else if (editingAlbumId.value) {
+    formData.append('coverUrl', newAlbumForm.value.cover_url)
+  } else {
+    return ElMessage.warning('请上传封面图片')
+  }
 
   try {
     let res
@@ -243,16 +240,18 @@ const submitAlbum = async () => {
     }
 
     if (res.data.code === 200) {
-      loadAlbums()
+      await loadAlbums()
       createDialogVisible.value = false
       ElMessage.success(editingAlbumId.value ? '修改成功' : '创建成功')
     } else {
       ElMessage.error(res.data.msg)
     }
-  } catch {
+  } catch (err) {
+    console.error(err)
     ElMessage.error('操作失败')
   }
 }
+
 
 // 修改相册
 // const editAlbum = (albumId) => {
@@ -273,7 +272,7 @@ const editAlbum = (albumId) => {
   newAlbumForm.value = { 
     ...album,
     cover_file: null, // 没有新上传文件
-    cover_preview: `http://localhost:8080${album.cover_url}` // 用现有图片 URL 显示
+    cover_preview: album.cover_url // 用现有图片 URL 显示
   }
   createDialogVisible.value = true
 }

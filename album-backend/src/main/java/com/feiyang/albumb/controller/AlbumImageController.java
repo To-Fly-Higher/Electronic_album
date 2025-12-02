@@ -3,19 +3,25 @@ package com.feiyang.albumb.controller;
 import com.feiyang.albumb.common.Result;
 import com.feiyang.albumb.entity.Photo;
 import com.feiyang.albumb.service.PhotoService;
+import com.feiyang.albumb.service.UserService;
+import com.feiyang.albumb.vo.UserVO;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/album")
 public class AlbumImageController {
 
     private final PhotoService photoService;
-
-    public AlbumImageController(PhotoService photoService) {
+    private final UserService userService;
+    public AlbumImageController(PhotoService photoService,UserService userService) {
+        this.userService = userService;
         this.photoService = photoService;
     }
 
@@ -67,5 +73,14 @@ public class AlbumImageController {
             e.printStackTrace();
             return Result.fail(500, "服务器内部错误");
         }
+    }
+    @GetMapping("/public-albums")
+    public Map<String, Object> getPublicAlbums() {
+        List<UserVO> users = userService.getUsersWithPublicAlbums();
+        Map<String, Object> response = new HashMap<>();
+        response.put("code", 200);
+        response.put("msg", "成功");
+        response.put("data", users);
+        return response;
     }
 }

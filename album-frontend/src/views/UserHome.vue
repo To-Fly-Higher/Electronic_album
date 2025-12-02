@@ -22,10 +22,10 @@
             <el-icon><User /></el-icon>
             <span>好友</span>
           </el-menu-item>
-          <el-menu-item index="notifications">
+          <!-- <el-menu-item index="notifications">
             <el-icon><Bell /></el-icon>
             <span>通知</span>
-          </el-menu-item>
+          </el-menu-item> -->
           <el-menu-item index="logout">
             <el-icon><SwitchButton /></el-icon>
             <span>退出登录</span>

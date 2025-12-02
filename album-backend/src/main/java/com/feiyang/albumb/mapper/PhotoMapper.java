@@ -33,4 +33,9 @@ public interface PhotoMapper {
             "JOIN album_photo ap ON p.id = ap.photo_id " +
             "WHERE ap.album_id = #{albumId}")
     List<Photo> getPhotosByAlbumId(@Param("albumId") Integer albumId);
+
+
+//
+//    @Select("SELECT id, name, url FROM photo WHERE album_id = #{albumId}")
+//    List<Photo> getPhotoByAlbumId(Integer albumId);
 }

@@ -3,11 +3,15 @@ package com.feiyang.albumb.controller;
 import com.feiyang.albumb.common.Result;
 import com.feiyang.albumb.entity.Album;
 import com.feiyang.albumb.service.AlbumService;
+import com.feiyang.albumb.service.UserService;
+import com.feiyang.albumb.vo.UserVO;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user/album")
@@ -111,4 +115,12 @@ public class AlbumController {
             return Result.fail(404, "相册不存在或删除失败");
         }
     }
+
+    //获取相册信息
+    @GetMapping("/{albumId}")
+    public Result<Album> getAlbumInf(@PathVariable Integer albumId) {
+        Album album = albumService.getAlbumInf(albumId);
+        return Result.success(album);
+    }
+
 }

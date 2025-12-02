@@ -1,6 +1,7 @@
 package com.feiyang.albumb.service.impl;
 
 import com.feiyang.albumb.entity.AlbumPhoto;
+import com.feiyang.albumb.entity.Comment;
 import com.feiyang.albumb.entity.Photo;
 import com.feiyang.albumb.mapper.AlbumPhotoMapper;
 import com.feiyang.albumb.mapper.CommentMapper;
@@ -61,20 +62,36 @@ public class PhotoServiceImpl implements PhotoService {
 
     @Override
     public List<PhotoVO> getPhotosByAlbumId(Integer albumId) {
-        List<Photo> photos = photoMapper.getPhotosByAlbumId(albumId);
-        List<PhotoVO> photoVOList = new ArrayList<>();
 
-        for (Photo photo : photos) {
+        List<Photo> list = photoMapper.getPhotosByAlbumId(albumId);
+        List<PhotoVO> result = new ArrayList<>();
+
+        for (Photo p : list) {
             PhotoVO vo = new PhotoVO();
-            vo.setId(photo.getId());
-            vo.setName(photo.getName());
-            vo.setUrl(photo.getUrl());
-            vo.setLikes(likeMapper.getLikesByPhotoId(photo.getId()));
-            vo.setComments(commentMapper.getCommentsByPhotoId(photo.getId()));
-            photoVOList.add(vo);
+            vo.setId(p.getId());
+            vo.setName(p.getName());
+            vo.setUrl(p.getUrl());
+            vo.setLikes(likeMapper.getLikeByPhotoId(p.getId()));
+            vo.setComments(commentMapper.getCommentsByPhotoId(p.getId()));
+            result.add(vo);
         }
 
-        return photoVOList;
+        return result;
     }
 
+    //发表评论
+    @Override
+    public void addComment(Integer photoId, Integer userId, String comment) {
+        Comment comment1 = new Comment();
+        comment1.setPhotoId(photoId);
+        comment1.setUserId(userId);
+        comment1.setContent(comment);
+        commentMapper.insertComment(comment1);
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteComment(Integer commentId) {
+        return commentMapper.deleteById(commentId) > 0;
+    }
 }

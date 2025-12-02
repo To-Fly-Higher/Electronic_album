@@ -125,8 +125,10 @@ const loadAlbumInfo = async () => {
   try {
     if (!albumId) return
 
-    const res = await axios.get(`/api/album/${albumId}`)
+    const res = await axios.get(`/api/user/album/${albumId}`)
     if (res.data.code === 200 && res.data.data) {
+      console.log("获取相册信息成功")
+      console.log(res.data.data)
       albumName.value = res.data.data.name
     } else {
       ElMessage.error(res.data.msg || '相册信息加载失败')
@@ -153,6 +155,7 @@ const loadAlbumImages = async () => {
 
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       // 这里统一处理 URL
+      console.log(res.data.data)
       images.value = res.data.data.map(img => ({
         ...img,
         url: fixUrl(img.url)
@@ -238,7 +241,7 @@ const submitComment = async () => {
   scrollToBottom()
 
   try {
-    await axios.post(`/api/image/${currentImage.value.id}/comment`, {
+    await axios.post(`/api/album/image/${currentImage.value.id}/comment`, {
       user_id: userId,  // 带上用户ID
       content: text
     })

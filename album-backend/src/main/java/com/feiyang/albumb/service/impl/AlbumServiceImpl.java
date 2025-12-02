@@ -57,5 +57,8 @@ public class AlbumServiceImpl implements AlbumService {
         int result = albumMapper.deleteById(id);
         return result > 0;
     }
-
+    @Override
+    public Album getAlbumInf(Integer albumid) {
+        return albumMapper.getAlbumInf(albumid);
+    }
 }

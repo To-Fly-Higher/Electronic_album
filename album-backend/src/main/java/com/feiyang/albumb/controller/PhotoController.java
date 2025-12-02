@@ -1,11 +1,13 @@
 package com.feiyang.albumb.controller;
 
 
+import com.feiyang.albumb.common.Result;
 import com.feiyang.albumb.entity.Photo;
 import com.feiyang.albumb.entity.User;
 import com.feiyang.albumb.service.PhotoLikeService;
 import com.feiyang.albumb.service.PhotoService;
 import com.feiyang.albumb.vo.PhotoVO;
+import lombok.Data;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
@@ -26,13 +28,8 @@ public class PhotoController {
     }
 
     @GetMapping("/{albumId}/images")
-    public Map<String, Object> getPhotos(@PathVariable Integer albumId) {
-        List<PhotoVO> photos = photoService.getPhotosByAlbumId(albumId);
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("msg", "success");
-        result.put("data", photos);
-        return result;
+    public Result<List<PhotoVO>> getPhotos(@PathVariable Integer albumId) {
+        return Result.success(photoService.getPhotosByAlbumId(albumId));
     }
 
     @DeleteMapping("/{albumId}/image/{photoId}")
@@ -102,6 +99,31 @@ public class PhotoController {
             result.put("code", 400);
             result.put("msg", e.getMessage());
             return result;
+        }
+    }
+
+    // 用一个 DTO 接收请求体
+    @Data
+    public static class CommentRequest {
+        private Integer userId;
+        private String content;
+        // getter + setter
+    }
+
+    @PostMapping("/image/{imageId}/comment")
+    public Result<Void> addComment(@PathVariable Integer imageId,
+                                   @RequestBody CommentRequest request) {
+        photoService.addComment(imageId, request.getUserId(), request.getContent());
+        return Result.success(null);
+    }
+
+    @DeleteMapping("/{commentId}")
+    public Result<Void> deleteComment(@PathVariable Integer commentId) {
+        boolean success = photoService.deleteComment(commentId);
+        if (success) {
+            return Result.success(null);
+        } else {
+            return Result.fail(404,"删除失败，评论不存在");
         }
     }
 }

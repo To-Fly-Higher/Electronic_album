@@ -11,4 +11,5 @@ public interface AlbumService {
     Album getAlbumById(Integer id);
 
     boolean deleteAlbum(Integer id);
+    Album getAlbumInf(Integer id);
 }

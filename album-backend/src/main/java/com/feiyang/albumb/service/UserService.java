@@ -1,6 +1,9 @@
 package com.feiyang.albumb.service;
 
 import com.feiyang.albumb.entity.User;
+import com.feiyang.albumb.vo.UserVO;
+
+import java.util.List;
 
 public interface UserService {
 
@@ -20,4 +23,7 @@ public interface UserService {
     User login(String username, String password);
 
     User findByNickname(String nickname);
+
+    List<UserVO> getUsersWithPublicAlbums();
+
 }

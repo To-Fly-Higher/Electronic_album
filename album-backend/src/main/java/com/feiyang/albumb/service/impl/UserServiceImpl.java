@@ -3,8 +3,10 @@ package com.feiyang.albumb.service.impl;
 import com.feiyang.albumb.entity.User;
 import com.feiyang.albumb.mapper.UserMapper;
 import com.feiyang.albumb.service.UserService;
+import com.feiyang.albumb.vo.UserVO;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -68,5 +70,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByNickname(String nickname) {
         return userMapper.findByNickname(nickname);
+    }
+
+    @Override
+    public List<UserVO> getUsersWithPublicAlbums() {
+        return userMapper.selectUsersWithPublicAlbums();
     }
 }

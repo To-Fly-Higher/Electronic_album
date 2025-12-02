@@ -5,7 +5,7 @@
     <el-row :gutter="20">
       <el-col v-for="user in users" :key="user.id" :xs="24" :sm="12" :md="8" :lg="6">
         <el-card class="user-card" shadow="hover">
-          <div class="user-name">{{ user.name }} 的公开相册</div>
+          <div class="user-name">{{ user.nickname }} 的公开相册</div>
 
           <!-- 遍历用户的所有公开相册 -->
           <div v-for="album in user.albums" :key="album.id" class="album-item">
@@ -13,7 +13,7 @@
             <el-button
               type="primary"
               size="small"
-              @click="reviewAlbum(user.id, user.name,album.id)"
+              @click="reviewAlbum(user.id, user.nickname,album.id)"
               style="margin-top: 5px;"
             >
               审查
@@ -36,16 +36,17 @@ const users = ref([])
 // 获取用户及公开相册列表
 const loadUsers = async () => {
   try {
-    const res = await axios.get('/api/admin/public-albums')
+    const res = await axios.get('/api/album/public-albums')
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       // 遍历用户列表和相册列表，补全封面 URL
+      console.log(res.data.data)
       users.value = res.data.data.map(user => {
         return {
           ...user,
           albums: Array.isArray(user.albums)
             ? user.albums.map(album => ({
                 ...album,
-                cover: fixUrl(album.cover)
+                cover: fixUrl(album.cover_url)
               }))
             : []
         }

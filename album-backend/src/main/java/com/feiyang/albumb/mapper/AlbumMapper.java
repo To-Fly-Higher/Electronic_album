@@ -49,4 +49,7 @@ public interface AlbumMapper {
             "ORDER BY id ASC")
     List<Album> getPublicAlbumsByUserId(@Param("userId") Integer userId);
 
+    //获取相册信息
+    @Select("select * from album where id = #{id}")
+    public Album getAlbumInf(Integer id);
 }
