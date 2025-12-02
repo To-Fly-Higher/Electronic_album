@@ -38,4 +38,15 @@ public interface AlbumMapper {
 
     @Delete("DELETE FROM album WHERE id = #{id}")
     int deleteById(Integer id);
+
+
+    /* 好友相册 */
+
+    // 查用户公开相册
+    @Select("SELECT id, user_id, category_id, name, cover_url, remark, is_public " +
+            "FROM album " +
+            "WHERE user_id = #{userId} AND is_public = 1 " +
+            "ORDER BY id ASC")
+    List<Album> getPublicAlbumsByUserId(@Param("userId") Integer userId);
+
 }
