@@ -76,37 +76,35 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     @Transactional
-    public void handleFriendRequest(Integer userId, Integer requestId, Integer action) {
-        if (userId == null || requestId == null || action == null) {
+    public void handleFriendRequest(Integer userId, Integer friendId, Integer action) {
+        if (userId == null || friendId == null || action == null) {
             throw new IllegalArgumentException("参数不能为空");
         }
 
-        // 查请求
-        FriendRequest request = friendMapper.getRequestById(requestId);
+        // 查出这条 pending 请求：
+        // from_user_id = friendId
+        // to_user_id   = userId（当前用户）
+        FriendRequest request = friendMapper.getPendingRequest(friendId, userId);
         if (request == null) {
-            throw new RuntimeException("好友请求不存在");
+            throw new RuntimeException("没有找到对应的待处理好友请求");
         }
 
-        // 校验当前用户是否有权限处理，必须是 toUserId
         if (!userId.equals(request.getToUserId())) {
             throw new RuntimeException("无权处理该好友请求");
         }
-
-        // 只能处理 待处理 的请求
         if (request.getStatus() != 0) {
             throw new RuntimeException("该好友请求已处理");
         }
 
-        // 根据 action 处理
         if (action == 1) {
             // 同意：更新请求状态 + 建立双向好友关系
-            friendMapper.updateRequestStatus(requestId, 1);
+            friendMapper.updatePendingRequestStatus(friendId, userId, 1);
 
-            Integer fromUserId = request.getFromUserId();
-            Integer toUserId = request.getToUserId(); // 也就是 userId
+            // for better looking
+            Integer fromUserId = friendId;
+            Integer toUserId   = userId;
 
-            // 正向反向插 2 条记录
-            // 先查 count 避免重复插入
+            // 防止重复插入：先查 count
             if (friendMapper.countFriendship(toUserId, fromUserId) == 0) {
                 friendMapper.insertFriend(toUserId, fromUserId);
             }
@@ -116,12 +114,13 @@ public class FriendServiceImpl implements FriendService {
 
         } else if (action == 2) {
             // 拒绝：只更新状态
-            friendMapper.updateRequestStatus(requestId, 2);
+            friendMapper.updatePendingRequestStatus(friendId, userId, 2);
+
         } else {
-            // invalid action code
             throw new IllegalArgumentException("非法的操作类型");
         }
     }
+
 
     @Override
     public List<FriendAlbumVO> listFriendPublicAlbums(Integer friendId) {

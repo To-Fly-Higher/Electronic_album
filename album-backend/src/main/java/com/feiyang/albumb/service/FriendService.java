@@ -14,13 +14,13 @@ public interface FriendService {
     List<FriendVO> getFriendList(Integer userId);
 
     /**
-     * 处理好友请求
-     *
-     * @param userId 接收方用户 ID
-     * @param requestId 好友请求记录 ID
-     * @param action 1=同意，2=拒绝
+     * 处理好友请求（同意/拒绝）
+     * @param userId   当前登录用户ID，对应 to_user_id
+     * @param friendId 对方用户ID，对应 from_user_id
+     * @param action   1=同意, 2=拒绝
      */
-    void handleFriendRequest(Integer userId, Integer requestId, Integer action);
+    void handleFriendRequest(Integer userId, Integer friendId, Integer action);
+
 
     /**
      * 拉取某个好友的公开相册列表

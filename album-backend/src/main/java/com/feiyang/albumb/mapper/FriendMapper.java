@@ -28,17 +28,6 @@ public interface FriendMapper {
 
     /* 处理好友请求 + 建立好友关系 */
 
-    // 按 ID 查请求记录
-    @Select("SELECT id, from_user_id, to_user_id, status " +
-            "FROM friend_request WHERE id = #{id}")
-    FriendRequest getRequestById(@Param("id") Integer id);
-
-
-    // 更新请求状态
-    @Update("UPDATE friend_request SET status = #{status} WHERE id = #{id}")
-    int updateRequestStatus(@Param("id") Integer id,
-                            @Param("status") Integer status);
-
     // 插入一条好友关系（单向）
     @Insert("INSERT INTO friend(user_id, friend_id) VALUES(#{userId}, #{friendId})")
     int insertFriend(@Param("userId") Integer userId,
@@ -49,5 +38,24 @@ public interface FriendMapper {
             "WHERE user_id = #{userId} AND friend_id = #{friendId}")
     int countFriendship(@Param("userId") Integer userId,
                         @Param("friendId") Integer friendId);
+
+    // 根据双方 ID 查一条请求记录
+    @Select("SELECT id, from_user_id, to_user_id, status " +
+            "FROM friend_request " +
+            "WHERE from_user_id = #{fromUserId} " +
+            "  AND to_user_id   = #{toUserId} " +
+            "  AND status       = 0")
+    FriendRequest getPendingRequest(@Param("fromUserId") Integer fromUserId,
+                                    @Param("toUserId") Integer toUserId);
+
+    // 根据双方 ID 更新请求状态
+    @Update("UPDATE friend_request " +
+            "SET status = #{status} " +
+            "WHERE from_user_id = #{fromUserId} " +
+            "  AND to_user_id   = #{toUserId} " +
+            "  AND status       = 0")
+    int updatePendingRequestStatus(@Param("fromUserId") Integer fromUserId,
+                                   @Param("toUserId") Integer toUserId,
+                                   @Param("status") Integer status);
 
 }

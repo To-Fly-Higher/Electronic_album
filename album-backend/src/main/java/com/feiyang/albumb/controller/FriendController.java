@@ -51,25 +51,19 @@ public class FriendController {
         return result;
     }
 
-    /**
-     * 处理好友请求
-     *
-     * @param body 请求体
-     * @return 处理执行结果
-     */
+    // 处理好友请求
     @PostMapping("/handle-request")
     public Result<Void> handleRequest(@RequestBody Map<String, Integer> body) {
-        Integer userId = body.get("user_id");
-        Integer requestId = body.get("request_id");
-        Integer action = body.get("action");
+        Integer userId   = body.get("user_id");   // 当前用户（收到请求的人）
+        Integer friendId = body.get("friend_id"); // 对方用户（发起请求的人）
+        Integer action   = body.get("action");    // 1=同意, 2=拒绝
 
-        // 校验 & 处理
-        friendService.handleFriendRequest(userId, requestId, action);
-
-        // done
+        friendService.handleFriendRequest(userId, friendId, action);
         return Result.success(null);
     }
 
+
+    // 拉取好友公开相册
     @GetMapping("/{friendId}/albums")
     public Result<List<FriendAlbumVO>> getFriendAlbums(@PathVariable("friendId") Integer friendId) {
         List<FriendAlbumVO> albums = friendService.listFriendPublicAlbums(friendId);
