@@ -32,20 +32,37 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'  // 如果你有 axios 封装
+import { ElMessage } from 'element-plus'
 
-const categories = ref([
-  { id: 1, name: '旅游' },
-  { id: 2, name: '校园' },
-  { id: 3, name: '宠物' },
-])
+const categories = ref([])
 
 const dialogVisible = ref(false)
 const dialogTitle = ref('新建类别')
 const editingCategoryId = ref(null)
 const form = ref({ name: '' })
 
-// 打开弹窗：新建或编辑
+// -------------- 获取类别列表 ----------------
+const loadCategories = async () => {
+  try {
+    const res = await axios.get('/api/user/album/categories')
+    if (res.data.code === 200) {
+      categories.value = res.data.data
+    } else {
+      ElMessage.error(res.data.msg)
+    }
+  } catch (err) {
+    ElMessage.error('类别加载失败')
+    console.error(err)
+  }
+}
+
+// 页面初始化加载
+onMounted(loadCategories)
+
+
+// -------------- 打开弹窗（新建/编辑） --------------
 const openDialog = (category = null) => {
   if (category) {
     dialogTitle.value = '编辑类别'
@@ -59,29 +76,63 @@ const openDialog = (category = null) => {
   dialogVisible.value = true
 }
 
-// 提交类别（新建或编辑）
-const submitCategory = () => {
+
+// -------------- 提交类别（新增 / 编辑） --------------
+const submitCategory = async () => {
   if (!form.value.name.trim()) {
-    return alert('请输入类别名称')
+    ElMessage.warning('请输入类别名称')
+    return
   }
 
-  if (editingCategoryId.value) {
-    // 编辑
-    const index = categories.value.findIndex(c => c.id === editingCategoryId.value)
-    if (index !== -1) categories.value[index].name = form.value.name.trim()
-  } else {
-    // 新建
-    const newId = categories.value.length ? Math.max(...categories.value.map(c => c.id)) + 1 : 1
-    categories.value.push({ id: newId, name: form.value.name.trim() })
+  try {
+    if (editingCategoryId.value) {
+      // -------- 编辑 --------
+      const res = await axios.put(`/api/category/update/${editingCategoryId.value}`, {
+        name: form.value.name.trim()
+      })
+      if (res.data.code === 200) {
+        ElMessage.success('更新成功')
+        loadCategories()
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+
+    } else {
+      // -------- 新建 --------
+      const res = await axios.post('/api/category/add', {
+        name: form.value.name.trim()
+      })
+      if (res.data.code === 200) {
+        ElMessage.success('创建成功')
+        loadCategories()
+      } else {
+        ElMessage.error(res.data.msg)
+      }
+    }
+
+    dialogVisible.value = false
+
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('操作失败')
   }
-  dialogVisible.value = false
 }
 
-// 删除类别
-const deleteCategory = (id) => {
-  if (confirm('确定要删除吗？')) {
-    const index = categories.value.findIndex(c => c.id === id)
-    if (index !== -1) categories.value.splice(index, 1)
+
+// -------------- 删除类别 --------------
+const deleteCategory = async (id) => {
+  if (!confirm('确定删除吗？')) return
+  try {
+    const res = await axios.delete(`/api/category/delete/${id}`)
+    if (res.data.code === 200) {
+      ElMessage.success('删除成功')
+      loadCategories()
+    } else {
+      ElMessage.error(res.data.msg)
+    }
+  } catch (err) {
+    console.error(err)
+    ElMessage.error('删除失败')
   }
 }
 </script>
