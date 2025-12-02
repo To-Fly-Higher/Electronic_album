@@ -185,7 +185,7 @@ const toggleLike = async (imageId) => {
   img.liked = !img.liked
 
   try {
-    await axios.post(`/api/image/${imageId}/like`, {
+    await axios.post(`/api/album/${imageId}/like`, {
       user_id: userId,    // 带上用户ID
       liked: img.liked    // 当前点赞状态
     })

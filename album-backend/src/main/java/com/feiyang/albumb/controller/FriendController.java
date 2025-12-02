@@ -2,11 +2,14 @@ package com.feiyang.albumb.controller;
 
 import com.feiyang.albumb.common.Result;
 import com.feiyang.albumb.entity.User;
+import com.feiyang.albumb.service.FriendRequestService;
 import com.feiyang.albumb.service.FriendService;
+import com.feiyang.albumb.service.PhotoLikeService;
 import com.feiyang.albumb.service.UserService;
 import com.feiyang.albumb.vo.FriendAlbumVO;
 import com.feiyang.albumb.vo.FriendInf;
 import com.feiyang.albumb.vo.FriendVO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -20,11 +23,13 @@ public class FriendController {
 
     private final FriendService friendService;
     private final UserService userService;
-
+    @Autowired
+    private FriendRequestService friendRequestService;
     // 构造器注入（推荐）
-    public FriendController(FriendService friendService,UserService userService) {
+    public FriendController(FriendService friendService,UserService userService,PhotoLikeService photoLikeService) {
         this.friendService = friendService;
         this.userService = userService;
+
     }
 
 
@@ -71,8 +76,28 @@ public class FriendController {
         return Result.success(albums);
     }
     @GetMapping("/{friendId}")
-    public Result<FriendInf> getFriendInformation(@PathVariable("friendId") Integer friendId) {
+    public Result<FriendInf> getFriendInformation(@PathVariable Integer friendId) {
         FriendInf friendInf = friendService.getFriendInf(friendId);
         return Result.success(friendInf);
     }
+
+
+    @PostMapping("/request")
+    public Map<String, Object> sendFriendRequest(@RequestBody Map<String, Object> paramMap) {
+        Map<String, Object> result = new HashMap<>(2);
+        try {
+//            logger.info("=== 好友请求接口开始处理，前端参数：{} ===", paramMap);
+            friendRequestService.sendFriendRequest(paramMap);
+            result.put("code", 200);
+            result.put("msg", "好友请求已发送");
+//            logger.info("=== 好友请求接口处理成功，响应：{} ===", result);
+        } catch (RuntimeException e) {
+            // 业务异常：打印消息+堆栈
+//            logger.error("=== 好友请求业务异常：{} ===", e.getMessage(), e);
+            result.put("code", 400);
+            result.put("msg", e.getMessage());
+        }
+        return result;
+    }
+
 }
