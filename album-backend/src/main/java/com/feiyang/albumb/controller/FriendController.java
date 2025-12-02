@@ -4,11 +4,9 @@ import com.feiyang.albumb.common.Result;
 import com.feiyang.albumb.entity.User;
 import com.feiyang.albumb.service.FriendService;
 import com.feiyang.albumb.service.UserService;
+import com.feiyang.albumb.vo.FriendAlbumVO;
 import com.feiyang.albumb.vo.FriendVO;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +25,8 @@ public class FriendController {
         this.friendService = friendService;
         this.userService = userService;
     }
+
+
     @GetMapping("/list")
     public Result<List<FriendVO>> getFriendList(@RequestParam("user_id") Integer userId) {
         List<FriendVO> list = friendService.getFriendList(userId);
@@ -49,5 +49,30 @@ public class FriendController {
         }
 
         return result;
+    }
+
+    /**
+     * 处理好友请求
+     *
+     * @param body 请求体
+     * @return 处理执行结果
+     */
+    @PostMapping("/handle-request")
+    public Result<Void> handleRequest(@RequestBody Map<String, Integer> body) {
+        Integer userId = body.get("user_id");
+        Integer requestId = body.get("request_id");
+        Integer action = body.get("action");
+
+        // 校验 & 处理
+        friendService.handleFriendRequest(userId, requestId, action);
+
+        // done
+        return Result.success(null);
+    }
+
+    @GetMapping("/{friendId}/albums")
+    public Result<List<FriendAlbumVO>> getFriendAlbums(@PathVariable("friendId") Integer friendId) {
+        List<FriendAlbumVO> albums = friendService.listFriendPublicAlbums(friendId);
+        return Result.success(albums);
     }
 }
