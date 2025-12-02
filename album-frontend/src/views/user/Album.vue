@@ -11,7 +11,9 @@
         :lg="6"
       >
         <el-card class="album-card" :body-style="{ padding: '0' }" shadow="hover">
-          <img :src="`http://localhost:8080${album.cover_url}`" class="album-cover" @click="openAlbum(album)" />
+          <!-- <img :src="`http://localhost:8080${album.cover_url}`" class="album-cover" @click="openAlbum(album)" /> -->
+          <img :src="album.cover_url" class="album-cover" @click="openAlbum(album)" />
+
           <div class="album-name">{{ album.name }}</div>
           <div class="album-operations">
             <el-button type="primary" size="small" @click.stop="editAlbum(album.id)">修改</el-button>
@@ -130,17 +132,44 @@ const openAlbum = (album) => {
   })
 }
 // 加载相册列表
+// const loadAlbums = async () => {
+//   if (!userId) return
+//   try {
+//     const res = await axios.get('/api/user/album/list', { params: { userId } })
+//     console.log(res.data)
+//     if (res.data.code === 200) albums.value = res.data.data
+//     else ElMessage.error(res.data.msg)
+//   } catch {
+//     ElMessage.error('相册加载失败')
+//   }
+// }
+// 加载相册列表
 const loadAlbums = async () => {
   if (!userId) return
   try {
     const res = await axios.get('/api/user/album/list', { params: { userId } })
-    console.log(res.data)
-    if (res.data.code === 200) albums.value = res.data.data
-    else ElMessage.error(res.data.msg)
+    if (res.data.code === 200) {
+      albums.value = res.data.data.map(album => ({
+        ...album,
+        cover_url: fixUrl(album.cover_url)
+      }))
+    } else {
+      ElMessage.error(res.data.msg)
+    }
   } catch {
     ElMessage.error('相册加载失败')
   }
 }
+
+// URL 补全函数
+const fixUrl = (url) => {
+  if (!url) return ''
+  // 如果已经是 http 或 https 开头，直接返回
+  if (/^https?:\/\//.test(url)) return url
+  // 不是 http，补全
+  return `http://localhost:8080${url}`
+}
+
 
 // 加载相册类别
 const loadCategories = async () => {
