@@ -179,14 +179,37 @@ const submitNewImage = async () => {
 }
 
 // ------------------ 加载图片 ------------------
+// const loadImages = async () => {
+//   try {
+//     const res = await axios.get(`/api/album/${albumId}/images`)
+//     images.value = res.data.data || []
+//   } catch {
+//     ElMessage.error('图片加载失败')
+//   }
+// }
+// 加载图片列表
 const loadImages = async () => {
   try {
     const res = await axios.get(`/api/album/${albumId}/images`)
-    images.value = res.data.data || []
+    const list = res.data.data || []
+
+    // 统一补全 url
+    images.value = list.map(img => ({
+      ...img,
+      url: fixUrl(img.url)
+    }))
   } catch {
     ElMessage.error('图片加载失败')
   }
 }
+
+// URL 补全函数（可以复用之前的）
+const fixUrl = (url) => {
+  if (!url) return ''
+  if (/^https?:\/\//.test(url)) return url
+  return `http://localhost:8080${url}`
+}
+
 
 // ------------------ 图片预览 ------------------
 const previewVisible = ref(false)
@@ -221,7 +244,7 @@ const showDynamic = (img) => {
 const downloadImage = (img) => {
   const link = document.createElement('a')
   const BASE_URL = 'http://localhost:8080'
-  link.href = img.url.startsWith('http') ? img.url : BASE_URL + img.url
+  link.href = img.url
   link.download = img.name || '图片'
   document.body.appendChild(link)
   link.click()
