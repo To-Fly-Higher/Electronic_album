@@ -55,7 +55,7 @@ public class FriendController {
     @PostMapping("/handle-request")
     public Result<Void> handleRequest(@RequestBody Map<String, Integer> body) {
         Integer userId   = body.get("user_id");   // 当前用户（收到请求的人）
-        Integer friendId = body.get("friend_id"); // 对方用户（发起请求的人）
+        Integer friendId = body.get("request_id"); // 对方用户（发起请求的人）
         Integer action   = body.get("action");    // 1=同意, 2=拒绝
 
         friendService.handleFriendRequest(userId, friendId, action);
