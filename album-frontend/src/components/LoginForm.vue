@@ -42,7 +42,7 @@ const submitForm = async () => {
     if (response.data.code === 200) {
       const userData = response.data.data
       const role = userData.role === 1 ? 'admin' : 'user'
-
+      console.log(response.data.data)
       // 保存 token 和用户信息到 localStorage
       // localStorage.setItem('token', userData.token)
       localStorage.setItem('user', JSON.stringify(userData))

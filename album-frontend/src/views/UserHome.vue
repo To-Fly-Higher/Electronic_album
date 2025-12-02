@@ -4,8 +4,8 @@
     <el-header class="header">
       <div class="title">电子相册</div>
       <div class="header-right">
-        <el-avatar :size="35" src="https://avatars.githubusercontent.com/u/1?v=4" />
-        <span class="nickname">{{ nickname }}</span>
+        <el-avatar :size="35" :src="user.avatar" />
+        <span class="nickname">{{ user.nickname }}</span>
       </div>
     </el-header>
 
@@ -42,19 +42,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { Picture, User, Bell, SwitchButton } from '@element-plus/icons-vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { Picture, User, SwitchButton } from '@element-plus/icons-vue'
 
-const nickname = '用户昵称'
-const activeMenu = ref('album')
 const router = useRouter()
-const route = useRoute()
+const activeMenu = ref('album')
+
+// 登录用户信息
+const user = ref({
+  nickname: '',
+  avatar: ''
+})
+
+onMounted(() => {
+  const savedUser = localStorage.getItem('user')
+  if (savedUser) {
+    try {
+      const parsed = JSON.parse(savedUser)
+      user.value.nickname = parsed.nickname || '用户昵称'
+      user.value.avatar = parsed.avatar || ''
+    } catch (e) {
+      console.error('解析用户信息失败', e)
+    }
+  }
+})
 
 const handleMenuSelect = (index) => {
   if (index === 'logout') {
-    // 退出登录逻辑
-    console.log('退出登录')
+    localStorage.removeItem('user') // 退出登录清除
     router.push('/login')
     return
   }
@@ -62,6 +78,7 @@ const handleMenuSelect = (index) => {
   router.push(`/user/${index}`)
 }
 </script>
+
 
 <style scoped>
 .header {

@@ -4,8 +4,8 @@
     <el-header class="header">
       <div class="title">电子相册</div>
       <div class="header-right">
-        <el-avatar :size="35" src="https://avatars.githubusercontent.com/u/1?v=4" />
-        <span class="nickname">{{ nickname }}</span>
+        <el-avatar :size="35" :src="adminUser.avatar" />
+        <span class="nickname">{{ adminUser.nickname }}</span>
       </div>
     </el-header>
 
@@ -38,17 +38,36 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Picture, Bell, SwitchButton } from '@element-plus/icons-vue'
 
-const nickname = '管理员'
 const activeMenu = ref('album-category')
 const router = useRouter()
 
+// 登录管理员信息
+const adminUser = ref({
+  nickname: '',
+  avatar: ''
+})
+
+onMounted(() => {
+  const savedUser = localStorage.getItem('user') // 假设登录成功时也保存了 user
+  if (savedUser) {
+    try {
+      const parsed = JSON.parse(savedUser)
+      adminUser.value.nickname = parsed.nickname || '管理员'
+      adminUser.value.avatar = parsed.avatar || ''
+    } catch (e) {
+      console.error('解析用户信息失败', e)
+      adminUser.value.nickname = '管理员'
+    }
+  }
+})
+
 const handleMenuSelect = (index) => {
   if (index === 'logout') {
-    // 退出登录逻辑
+    localStorage.removeItem('user') // 退出登录清理
     console.log('登出')
     router.push('/login')
     return
@@ -57,6 +76,8 @@ const handleMenuSelect = (index) => {
   router.push(`/admin/${index}`)
 }
 </script>
+
+
 
 <style scoped>
 .header {
