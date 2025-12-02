@@ -136,14 +136,26 @@ const loadAlbumInfo = async () => {
   }
 }
 
+// URL 补全函数
+const fixUrl = (url) => {
+  if (!url) return ''
+  if (/^https?:\/\//.test(url)) return url   // 已经是完整链接
+  return `http://localhost:8080${url}`       // 自动补全
+}
+
 // ------- 获取相册图片 -------
 const loadAlbumImages = async () => {
   try {
     if (!albumId) return
 
     const res = await axios.get(`/api/album/${albumId}/images`)
+
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
-      images.value = res.data.data
+      // 这里统一处理 URL
+      images.value = res.data.data.map(img => ({
+        ...img,
+        url: fixUrl(img.url)
+      }))
     } else {
       images.value = []
       ElMessage.info(res.data.msg || '暂无图片')
