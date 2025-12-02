@@ -25,7 +25,7 @@ const routes = [
         component: () => import('../views/admin/Review.vue')
       },
       {
-        path: 'review/:userId',
+        path: 'review/:userId/:userName/:albumId',
         name: 'adminReviewDetail',
         component: () => import('../views/admin/ReviewDetail.vue'),
         props: true

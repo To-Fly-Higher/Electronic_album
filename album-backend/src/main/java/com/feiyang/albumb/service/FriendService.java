@@ -1,6 +1,7 @@
 package com.feiyang.albumb.service;
 
 import com.feiyang.albumb.vo.FriendAlbumVO;
+import com.feiyang.albumb.vo.FriendInf;
 import com.feiyang.albumb.vo.FriendVO;
 
 import java.util.List;
@@ -29,4 +30,8 @@ public interface FriendService {
      * @return 好友公开相册列表
      */
     List<FriendAlbumVO> listFriendPublicAlbums(Integer friendId);
+
+
+    //获取好友信息
+    FriendInf getFriendInf(Integer friendId);
 }

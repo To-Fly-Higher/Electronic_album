@@ -2,6 +2,8 @@ package com.feiyang.albumb.mapper;
 
 import com.feiyang.albumb.entity.FriendRequest;
 import com.feiyang.albumb.entity.User;
+import com.feiyang.albumb.vo.FriendInf;
+import com.feiyang.albumb.vo.FriendVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -57,5 +59,10 @@ public interface FriendMapper {
     int updatePendingRequestStatus(@Param("fromUserId") Integer fromUserId,
                                    @Param("toUserId") Integer toUserId,
                                    @Param("status") Integer status);
+
+    //获取好友信息
+    @Select("SELECT id, nickname, avatar FROM users WHERE id = #{userId}")
+    FriendInf getFriendInf(@Param("userId") Integer userId);
+
 
 }

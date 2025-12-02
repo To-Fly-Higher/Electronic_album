@@ -7,6 +7,7 @@ import com.feiyang.albumb.mapper.AlbumMapper;
 import com.feiyang.albumb.mapper.FriendMapper;
 import com.feiyang.albumb.mapper.UserMapper;
 import com.feiyang.albumb.service.FriendService;
+import com.feiyang.albumb.vo.FriendInf;
 import com.feiyang.albumb.vo.FriendVO;
 import com.feiyang.albumb.vo.FriendAlbumVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,5 +152,10 @@ public class FriendServiceImpl implements FriendService {
         }
 
         return result;
+    }
+    //获取好友信息
+    @Override
+    public FriendInf getFriendInf(Integer friendId) {
+        return friendMapper.getFriendInf(friendId);
     }
 }

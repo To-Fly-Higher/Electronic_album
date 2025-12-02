@@ -62,7 +62,7 @@
           :key="index"
           class="comment-item"
         >
-          <strong>{{ cmt.user }}:</strong> {{ cmt.text }}
+          <strong>{{ cmt.user.username }}:</strong> {{ cmt.content }}
           <el-button
             type="danger"
             size="mini"
@@ -81,26 +81,68 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
 
 const route = useRoute()
 const router = useRouter()
 
-const user = ref({ id: route.params.userId, name: 'Alice' })
+// 接收路由参数
+const userId = route.params.userId
+const userName = route.params.userName
+const albumId = route.params.albumId
 
-// 模拟公开相册图片数据
-const albumImages = ref([
-  { id: 1, name: '旅游1', url: 'https://picsum.photos/300/200?random=1', comments: [{ user: 'Bob', text: '好美!' }] },
-  { id: 2, name: '旅游2', url: 'https://picsum.photos/300/200?random=2', comments: [] },
-  { id: 3, name: '旅游3', url: 'https://picsum.photos/300/200?random=3', comments: [{ user: 'Charlie', text: '想去!' }] },
-])
+const user = ref({ id: userId, name: userName })
+
+const albumImages = ref([])
 
 // 评论弹窗逻辑
 const commentDialogVisible = ref(false)
 const currentImage = ref(null)
 const currentImageComments = ref([])
 const commentList = ref(null)
+
+// 获取单个公开相册详情
+// const loadAlbum = async () => {
+//   try {
+//     const res = await axios.get(`/api/album/${albumId}`)
+//     if (res.data.code === 200 && res.data.data) {
+//       albumImages.value = res.data.data.map(img => ({
+//         id: img.id,
+//         name: img.name,
+//         url: fixUrl(img.url),
+//         comments: img.comments || []
+//       }))
+//     }
+//   } catch (err) {
+//     console.error(err)
+//   }
+// }
+const loadAlbum = async () => {
+  try {
+    const res = await axios.get(`/api/admin/album/${albumId}`)
+    if (res.data.code === 200 && Array.isArray(res.data.data)) {
+      albumImages.value = res.data.data.map(img => ({
+        id: img.id,
+        name: img.name,
+        url: fixUrl(img.url),
+        likes: img.likes || [],          // 点赞用户列表
+        comments: img.comments || []     // 评论列表
+      }))
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+// URL 补全函数（可以复用之前的）
+const fixUrl = (url) => {
+  if (!url) return ''
+  if (/^https?:\/\//.test(url)) return url
+  return `http://localhost:8080${url}`
+}
+
 
 const openComments = (image) => {
   currentImage.value = image
@@ -131,14 +173,24 @@ const deleteImage = (imageId) => {
 
 const deleteAlbum = () => {
   if (confirm('确认删除该用户的公开相册吗？')) {
-    router.back()
+    // 调接口删除相册
+    axios.delete(`/api/admin/album/${albumId}`).then(res => {
+      if (res.data.code === 200) router.back()
+    }).catch(err => console.error(err))
   }
 }
 
 const goBack = () => {
   router.back()
 }
+
+// 页面加载时获取相册数据
+onMounted(() => {
+  console.log('Reviewing album for user:', userId, userName, albumId)
+  loadAlbum()
+})
 </script>
+
 
 <style scoped>
 .admin-album-detail { padding: 20px; }

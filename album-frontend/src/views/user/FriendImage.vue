@@ -109,7 +109,8 @@ const loadFriendInfo = async () => {
 
     const res = await axios.get(`/api/friend/${friendId}`)
     if (res.data.code === 200 && res.data.data) {
-      friendName.value = res.data.data.name
+      console.log(res.data.data)
+      friendName.value = res.data.data.nickname
     } else {
       ElMessage.error(res.data.msg || '好友信息加载失败')
     }

@@ -5,6 +5,7 @@ import com.feiyang.albumb.entity.User;
 import com.feiyang.albumb.service.FriendService;
 import com.feiyang.albumb.service.UserService;
 import com.feiyang.albumb.vo.FriendAlbumVO;
+import com.feiyang.albumb.vo.FriendInf;
 import com.feiyang.albumb.vo.FriendVO;
 import org.springframework.web.bind.annotation.*;
 
@@ -68,5 +69,10 @@ public class FriendController {
     public Result<List<FriendAlbumVO>> getFriendAlbums(@PathVariable("friendId") Integer friendId) {
         List<FriendAlbumVO> albums = friendService.listFriendPublicAlbums(friendId);
         return Result.success(albums);
+    }
+    @GetMapping("/{friendId}")
+    public Result<FriendInf> getFriendInformation(@PathVariable("friendId") Integer friendId) {
+        FriendInf friendInf = friendService.getFriendInf(friendId);
+        return Result.success(friendInf);
     }
 }
