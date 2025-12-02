@@ -20,4 +20,24 @@ public class AlbumCategoryServiceImpl implements AlbumCategoryService {
     public List<AlbumCategory> getAllCategories() {
         return categoryMapper.getAllCategories();
     }
+
+    @Override
+    public void addCategory(String name) {
+        AlbumCategory category = new AlbumCategory();
+        category.setName(name);
+        categoryMapper.insertCategory(category);
+    }
+
+    @Override
+    public void updateCategory(Integer id, String name) {
+        AlbumCategory category = new AlbumCategory();
+        category.setId(id);
+        category.setName(name);
+        categoryMapper.updateCategory(category);
+    }
+
+    @Override
+    public void deleteCategory(Integer id) {
+        categoryMapper.deleteCategory(id);
+    }
 }
