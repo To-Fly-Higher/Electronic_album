@@ -53,7 +53,7 @@ const loadAlbums = async () => {
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       albums.value = res.data.data.map(a => ({
         ...a,
-        cover: a.cover || 'https://picsum.photos/300/200?random=' + a.id
+        cover: fixUrl(a.cover) || 'https://picsum.photos/300/200?random=' + a.id
       }))
       if (albums.value.length > 0) friendName.value = albums.value[0].ownerName || '好友'
     } else {
@@ -64,6 +64,12 @@ const loadAlbums = async () => {
     console.error(err)
     ElMessage.error('公开相册加载失败')
   }
+}
+// URL 补全函数（可以复用之前的）
+const fixUrl = (url) => {
+  if (!url) return ''
+  if (/^https?:\/\//.test(url)) return url
+  return `http://localhost:8080${url}`
 }
 
 
