@@ -22,6 +22,10 @@
             <el-icon><Bell /></el-icon>
             <span>动态审查</span>
           </el-menu-item>
+          <el-menu-item index="add-admin">
+            <el-icon><SwitchButton /></el-icon>
+            <span>添加管理员</span>
+          </el-menu-item>
           <el-menu-item index="logout">
             <el-icon><SwitchButton /></el-icon>
             <span>登出</span>
@@ -50,6 +54,12 @@ const adminUser = ref({
   nickname: '',
   avatar: ''
 })
+// URL 补全函数（可以复用之前的）
+const fixUrl = (url) => {
+  if (!url) return ''
+  if (/^https?:\/\//.test(url)) return url
+  return `http://localhost:8080${url}`
+}
 
 onMounted(() => {
   const savedUser = localStorage.getItem('user') // 假设登录成功时也保存了 user
@@ -57,7 +67,7 @@ onMounted(() => {
     try {
       const parsed = JSON.parse(savedUser)
       adminUser.value.nickname = parsed.nickname || '管理员'
-      adminUser.value.avatar = parsed.avatar || ''
+      adminUser.value.avatar = fixUrl(parsed.avatar) || ''
     } catch (e) {
       console.error('解析用户信息失败', e)
       adminUser.value.nickname = '管理员'

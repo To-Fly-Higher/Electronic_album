@@ -24,24 +24,28 @@ public class UserServiceImpl implements UserService {
     /**
      * 注册（明文密码）
      */
-    public void register(String username, String password) {
+    public void register(String username, String password, String avatarUrl) {
+        // 1. 基本参数校验
         if (username == null || username.isBlank()
                 || password == null || password.isBlank()) {
             throw new IllegalArgumentException("用户名或密码不能为空");
         }
 
+        // 2. 用户名唯一性校验
         User existing = userMapper.findByUsername(username);
         if (existing != null) {
             throw new IllegalStateException("用户名已存在");
         }
 
+        // 3. 组装 User 对象
         User user = new User();
         user.setUsername(username);
-        user.setPassword(password); // ⭐ 明文存储
+        user.setPassword(password);        // ⭐ 仍然明文（和你现在一致）
         user.setNickname(username);
-        user.setAvatar(null);
+        user.setAvatar(avatarUrl);         // ⭐ 这里改了
         user.setRole(0);
 
+        // 4. 入库
         userMapper.insertUser(user);
     }
 

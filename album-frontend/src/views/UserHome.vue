@@ -54,6 +54,12 @@ const user = ref({
   nickname: '',
   avatar: ''
 })
+// URL 补全函数（可以复用之前的）
+const fixUrl = (url) => {
+  if (!url) return ''
+  if (/^https?:\/\//.test(url)) return url
+  return `http://localhost:8080${url}`
+}
 
 onMounted(() => {
   const savedUser = localStorage.getItem('user')
@@ -61,7 +67,7 @@ onMounted(() => {
     try {
       const parsed = JSON.parse(savedUser)
       user.value.nickname = parsed.nickname || '用户昵称'
-      user.value.avatar = parsed.avatar || ''
+      user.value.avatar = fixUrl(parsed.avatar || '')
     } catch (e) {
       console.error('解析用户信息失败', e)
     }

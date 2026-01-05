@@ -29,6 +29,11 @@ const routes = [
         name: 'adminReviewDetail',
         component: () => import('../views/admin/ReviewDetail.vue'),
         props: true
+      },
+      {
+        path: 'add-admin',
+        name: 'AddAdmin',
+        component: () => import('../views/admin/AddAdmin.vue')
       }
     ]
   },

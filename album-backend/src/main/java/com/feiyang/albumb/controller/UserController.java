@@ -9,7 +9,10 @@ import com.feiyang.albumb.service.impl.UserServiceImpl;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -25,20 +28,55 @@ public class UserController {
     }
 
     // 注册
+// 注册（支持头像上传）
     @PostMapping("/register")
-    public Result<Void> register(@RequestBody RegisterRequest req) {
+    public Result<Void> register(
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam(value = "avatar", required = false) MultipartFile avatar
+    ) {
         try {
-            userService.register(req.getUsername(), req.getPassword());
-            // 200 成功
+            String avatarUrl = null;
+
+            // 1. 如果上传了头像，先保存到本地
+            if (avatar != null && !avatar.isEmpty()) {
+
+                // 1.1 确定保存路径
+                String projectPath = System.getProperty("user.dir");
+                String uploadDir = projectPath + "/uploads/avatar/";
+                File dir = new File(uploadDir);
+                if (!dir.exists() && !dir.mkdirs()) {
+                    return Result.fail(500, "创建头像目录失败");
+                }
+
+                // 1.2 生成安全文件名
+                String originalFilename = avatar.getOriginalFilename();
+                String safeName = (originalFilename == null || originalFilename.isEmpty())
+                        ? "avatar.png"
+                        : originalFilename;
+                String fileName = System.currentTimeMillis() + "_" + safeName;
+
+                // 1.3 保存文件
+                File dest = new File(dir, fileName);
+                avatar.transferTo(dest);
+
+                // 1.4 生成给前端用的访问路径
+                avatarUrl = "/uploads/avatar/" + fileName;
+            }
+
+            // 2. 调用业务层注册（把 avatarUrl 传进去）
+            userService.register(username, password, avatarUrl);
+
             return Result.success("注册成功", null);
+
         } catch (IllegalArgumentException e) {
-            // 400 用户名或密码不能为空
             return Result.fail(400, e.getMessage());
         } catch (IllegalStateException e) {
-            // 400 用户名已存在
             return Result.fail(400, e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Result.fail(500, "头像保存失败");
         } catch (Exception e) {
-            // 500 服务器内部错误
             e.printStackTrace();
             return Result.fail(500, "服务器内部错误");
         }
