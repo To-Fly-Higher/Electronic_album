@@ -8,6 +8,7 @@ import com.feiyang.albumb.mapper.CommentMapper;
 import com.feiyang.albumb.mapper.PhotoLikeMapper;
 import com.feiyang.albumb.mapper.PhotoMapper;
 import com.feiyang.albumb.service.PhotoService;
+import com.feiyang.albumb.vo.LikeVO;
 import com.feiyang.albumb.vo.PhotoVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,8 +61,30 @@ public class PhotoServiceImpl implements PhotoService {
         return rows > 0;
     }
 
+//    @Override
+//    public List<PhotoVO> getPhotosByAlbumId(Integer albumId) {
+//
+//        List<Photo> list = photoMapper.getPhotosByAlbumId(albumId);
+//        List<PhotoVO> result = new ArrayList<>();
+//
+//        for (Photo p : list) {
+//            PhotoVO vo = new PhotoVO();
+//            vo.setId(p.getId());
+//            vo.setName(p.getName());
+//            vo.setUrl(p.getUrl());
+//            vo.setLikes(likeMapper.getLikeByPhotoId(p.getId()));
+//            vo.setComments(commentMapper.getCommentsByPhotoId(p.getId()));
+//            // ⭐ 核心：判断当前用户是否点过赞
+//            boolean liked = likes.stream()
+//                    .anyMatch(like -> like.getUserId().equals(userId));
+//            vo.setLiked(liked);
+//            result.add(vo);
+//        }
+//
+//        return result;
+//    }
     @Override
-    public List<PhotoVO> getPhotosByAlbumId(Integer albumId) {
+    public List<PhotoVO> getPhotosByAlbumId(Integer albumId, Integer userId) {
 
         List<Photo> list = photoMapper.getPhotosByAlbumId(albumId);
         List<PhotoVO> result = new ArrayList<>();
@@ -71,13 +94,21 @@ public class PhotoServiceImpl implements PhotoService {
             vo.setId(p.getId());
             vo.setName(p.getName());
             vo.setUrl(p.getUrl());
-            vo.setLikes(likeMapper.getLikeByPhotoId(p.getId()));
+
+            List<LikeVO> likes = likeMapper.getLikeByPhotoId(p.getId());
+            vo.setLikes(likes);
             vo.setComments(commentMapper.getCommentsByPhotoId(p.getId()));
+
+            // ⭐ 核心：判断当前用户是否点过赞
+            boolean liked = likes.stream()
+                    .anyMatch(like -> like.getUserId().equals(userId));
+            vo.setLiked(liked);
+
             result.add(vo);
         }
-
         return result;
     }
+
 
     //发表评论
     @Override

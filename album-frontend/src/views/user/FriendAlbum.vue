@@ -55,7 +55,8 @@ const loadAlbums = async () => {
         ...a,
         cover: fixUrl(a.cover) || 'https://picsum.photos/300/200?random=' + a.id
       }))
-      if (albums.value.length > 0) friendName.value = albums.value[0].ownerName || '好友'
+      console.log(albums.value)
+      if (albums.value.length > 0) friendName.value = albums.value[0].owner_name || '好友'
     } else {
       albums.value = []
       ElMessage.info(res.data.msg || '暂无公开相册')

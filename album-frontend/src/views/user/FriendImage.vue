@@ -151,7 +151,12 @@ const loadAlbumImages = async () => {
   try {
     if (!albumId) return
 
-    const res = await axios.get(`/api/album/${albumId}/images`)
+    // const res = await axios.get(`/api/album/${albumId}/images`)
+    const res = await axios.get(`/api/album/${albumId}/images`, {
+      params: {
+        userId
+      }
+    })
 
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       // 这里统一处理 URL

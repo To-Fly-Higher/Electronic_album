@@ -33,7 +33,12 @@ public interface PhotoLikeMapper {
             "VALUES (#{photoId}, #{userId})")
     int likePhoto(@Param("photoId") Integer photoId, @Param("userId") Integer userId);
 
-    @Select("SELECT l.id, u.avatar " +
+//    @Select("SELECT l.id, u.avatar " +
+//            "FROM photo_like l " +
+//            "JOIN users u ON l.user_id = u.id " +
+//            "WHERE l.photo_id = #{photoId}")
+//    List<LikeVO> getLikeByPhotoId(Integer photoId);
+    @Select("SELECT l.id, l.user_id AS userId, u.avatar " +
             "FROM photo_like l " +
             "JOIN users u ON l.user_id = u.id " +
             "WHERE l.photo_id = #{photoId}")

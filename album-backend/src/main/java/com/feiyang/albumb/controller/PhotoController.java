@@ -27,11 +27,17 @@ public class PhotoController {
         this.photoLikeService = photoLikeService;
     }
 
+//    @GetMapping("/{albumId}/images")
+//    public Result<List<PhotoVO>> getPhotos(@PathVariable Integer albumId) {
+//        return Result.success(photoService.getPhotosByAlbumId(albumId));
+//    }
     @GetMapping("/{albumId}/images")
-    public Result<List<PhotoVO>> getPhotos(@PathVariable Integer albumId) {
-        return Result.success(photoService.getPhotosByAlbumId(albumId));
+    public Result<List<PhotoVO>> getPhotos(
+            @PathVariable Integer albumId,
+            @RequestParam Integer userId
+    ) {
+        return Result.success(photoService.getPhotosByAlbumId(albumId, userId));
     }
-
     @DeleteMapping("/{albumId}/image/{photoId}")
     public Map<String, Object> deletePhoto(
             @PathVariable Integer albumId,  // 从路径获取相册ID

@@ -12,4 +12,5 @@ public class PhotoVO {
     private String url;
     private List<LikeVO> likes;     // 点赞用户列表
     private List<CommentVO> comments;  // 评论列表
+    private Boolean liked;   // 👈 当前用户是否点赞
 }

@@ -190,14 +190,43 @@ const submitNewImage = async () => {
 // 加载图片列表
 const loadImages = async () => {
   try {
-    const res = await axios.get(`/api/album/${albumId}/images`)
+    // const res = await axios.get(`/api/album/${albumId}/images`)
+    const res = await axios.get(`/api/album/${albumId}/images`, {
+      params: {
+        userId
+      }
+    })
     const list = res.data.data || []
+    console.log(list)
 
-    // 统一补全 url
-    images.value = list.map(img => ({
-      ...img,
-      url: fixUrl(img.url)
-    }))
+    // 统一补全 URL，包括图片、点赞用户头像和评论用户头像
+    images.value = list.map(img => {
+      // 补全图片 URL
+      const url = fixUrl(img.url)
+
+      // 补全点赞用户头像 URL
+      const likes = (img.likes || []).map(like => ({
+        ...like,
+        avatar: fixUrl(like.avatar)
+      }))
+
+      // 补全评论用户头像 URL
+      const comments = (img.comments || []).map(cmt => ({
+        ...cmt,
+        user: {
+          ...cmt.user,
+          avatar: fixUrl(cmt.user.avatar)
+        }
+      }))
+
+      return {
+        ...img,
+        url,
+        likes,
+        comments
+      }
+    })
+
   } catch {
     ElMessage.error('图片加载失败')
   }
@@ -241,15 +270,50 @@ const showDynamic = (img) => {
 }
 
 // ------------------ 下载图片 ------------------
-const downloadImage = (img) => {
-  const link = document.createElement('a')
-  const BASE_URL = 'http://localhost:8080'
-  link.href = img.url
-  link.download = img.name || '图片'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+// const downloadImage = (img) => {
+//   const link = document.createElement('a')
+//   const BASE_URL = 'http://localhost:8080'
+//   link.href = img.url
+//   link.download = img.name || '图片'
+//   document.body.appendChild(link)
+//   link.click()
+//   document.body.removeChild(link)
+// }
+const downloadImage = async (img) => {
+  try {
+    const res = await axios.get(img.url, {
+      responseType: 'blob'
+    })
+
+    // 1️⃣ 从响应头中获取真实的 MIME 类型
+    const mimeType =
+      res.headers['content-type'] || 'image/jpeg'
+
+    // 2️⃣ 构造带 type 的 Blob
+    const blob = new Blob([res.data], { type: mimeType })
+
+    // 3️⃣ 确保文件名有后缀
+    let filename = img.name || 'image'
+    if (!/\.(jpg|jpeg|png|webp|gif)$/i.test(filename)) {
+      const ext = mimeType.split('/')[1] || 'jpg'
+      filename = `${filename}.${ext}`
+    }
+
+    // 4️⃣ 触发下载
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    ElMessage.error('下载失败')
+  }
 }
+
 
 onMounted(() => {
   loadImages()

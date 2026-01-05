@@ -106,7 +106,12 @@ const commentList = ref(null)
 
 const loadAlbum = async () => {
   try {
-    const res = await axios.get(`/api/album/${albumId}/images`)
+    // const res = await axios.get(`/api/album/${albumId}/images`)
+    const res = await axios.get(`/api/album/${albumId}/images`, {
+      params: {
+        userId
+      }
+    })
     if (res.data.code === 200 && Array.isArray(res.data.data)) {
       albumImages.value = res.data.data.map(img => ({
         id: img.id,

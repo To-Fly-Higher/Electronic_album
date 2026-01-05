@@ -107,6 +107,15 @@ const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
 // 前端直接处理好的列表，包含好友和请求
 const visibleFriends = computed(() => friends.value.filter(f => f))
 
+// URL 补全函数
+const fixUrl = (url) => {
+  if (!url) return ''
+  // 如果已经是 http 或 https 开头，直接返回
+  if (/^https?:\/\//.test(url)) return url
+  // 不是 http，补全
+  return `http://localhost:8080${url}`
+}
+
 const loadFriends = async () => {
   if (!userId) return ElMessage.warning('请先登录')
 
@@ -117,6 +126,10 @@ const loadFriends = async () => {
 
     if (res.data.code === 200 && res.data.data) {
       friends.value = res.data.data;  // 直接赋值
+      friends.value.forEach(friend => {
+        friend.avatar = fixUrl(friend.avatar);
+      });
+      
       console.log('好友列表加载成功');
       console.log(res.data.data);
       console.log(friends.value);     // 检查是否有数据

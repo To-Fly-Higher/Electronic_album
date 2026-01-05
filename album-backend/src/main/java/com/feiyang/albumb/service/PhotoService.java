@@ -17,7 +17,7 @@ public interface PhotoService {
     // 处理关联 & 图片本身
     boolean deletePhoto(Integer albumId, Integer photoId);
 
-    List<PhotoVO> getPhotosByAlbumId(Integer albumId);
+    List<PhotoVO> getPhotosByAlbumId(Integer albumId,Integer userId);
 
 
     //发表评论
